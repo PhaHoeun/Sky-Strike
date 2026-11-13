@@ -191,7 +191,7 @@ class _GamingLoadingScreenState extends State<GamingLoadingScreen>
                         const SizedBox(height: 18),
                         _GameEmblemHeader(animValue: t),
                         const Spacer(),
-                        _TacticalTipBanner(tip: _tacticalTips[_tipIndex]),
+                        _TacticalTipBanner(tip: _tacticalTips[_tipIndex]), 
                         const SizedBox(height: 12),
                         _ArmoredLoadingConsole(
                           progress: progress,
