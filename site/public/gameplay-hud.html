@@ -1,0 +1,589 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" name="viewport"/>
+<title>AVIONICS // TAC-01 - Combat HUD</title>
+<!-- Fonts -->
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&amp;family=Space+Grotesk:wght@600;700;800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<!-- Tailwind CSS -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          "colors": {
+            "surface": "#0c1320",
+            "secondary-fixed": "#ffdbcc",
+            "on-secondary-fixed": "#351000",
+            "error": "#ffb4ab",
+            "primary": "#c3f5ff",
+            "surface-variant": "#2e3543",
+            "surface-dim": "#0c1320",
+            "surface-container-highest": "#2e3543",
+            "error-container": "#93000a",
+            "tertiary-fixed-dim": "#00e475",
+            "tertiary-fixed": "#62ff96",
+            "on-primary-fixed": "#001f24",
+            "secondary": "#ffb693",
+            "inverse-on-surface": "#2a303f",
+            "on-tertiary-fixed-variant": "#005226",
+            "on-error": "#690005",
+            "on-primary-fixed-variant": "#004f58",
+            "on-primary-container": "#00626e",
+            "on-tertiary-container": "#006731",
+            "surface-tint": "#00daf3",
+            "tertiary": "#b1ffbf",
+            "on-primary": "#00363d",
+            "surface-bright": "#323948",
+            "inverse-surface": "#dce2f5",
+            "on-background": "#dce2f5",
+            "primary-fixed": "#9cf0ff",
+            "primary-fixed-dim": "#00daf3",
+            "secondary-container": "#fe6b00",
+            "on-secondary": "#561f00",
+            "inverse-primary": "#006875",
+            "on-error-container": "#ffdad6",
+            "background": "#0c1320",
+            "surface-container-high": "#232a38",
+            "tertiary-container": "#22ef7e",
+            "on-surface-variant": "#bac9cc",
+            "secondary-fixed-dim": "#ffb693",
+            "on-tertiary": "#003918",
+            "surface-container": "#19202d",
+            "outline": "#849396",
+            "outline-variant": "#3b494c",
+            "on-secondary-container": "#572000",
+            "primary-container": "#00e5ff",
+            "on-surface": "#dce2f5",
+            "surface-container-low": "#151c29",
+            "on-tertiary-fixed": "#00210b",
+            "on-secondary-fixed-variant": "#7a3000",
+            "surface-container-lowest": "#070e1b"
+          },
+          "borderRadius": {
+            "DEFAULT": "0.25rem",
+            "lg": "0.5rem",
+            "xl": "0.75rem",
+            "full": "9999px"
+          },
+          "spacing": {
+            "space-md": "0.75rem",
+            "gutter": "0.75rem",
+            "space-sm": "0.5rem",
+            "space-xl": "1.5rem",
+            "space-lg": "1rem",
+            "margin-mobile": "0.75rem",
+            "space-xs": "0.25rem",
+            "margin": "1.25rem",
+            "gutter-mobile": "0.5rem"
+          },
+          "fontFamily": {
+            "body-sm": ["JetBrains Mono"],
+            "label-sm": ["JetBrains Mono"],
+            "body-lg": ["JetBrains Mono"],
+            "label-lg": ["JetBrains Mono"],
+            "body-md": ["JetBrains Mono"],
+            "label-md": ["JetBrains Mono"],
+            "headline-lg": ["Space Grotesk"],
+            "headline-md": ["Space Grotesk"],
+            "headline-xl": ["Space Grotesk"],
+            "headline-xl-mobile": ["Space Grotesk"]
+          },
+          "fontSize": {
+            "body-sm": ["11px", { "lineHeight": "15px", "fontWeight": "400" }],
+            "label-sm": ["9px", { "lineHeight": "12px", "fontWeight": "700" }],
+            "body-lg": ["15px", { "lineHeight": "22px", "fontWeight": "500" }],
+            "label-lg": ["12px", { "lineHeight": "16px", "fontWeight": "600" }],
+            "body-md": ["13px", { "lineHeight": "18px", "fontWeight": "400" }],
+            "label-md": ["10px", { "lineHeight": "14px", "fontWeight": "600" }],
+            "headline-lg": ["22px", { "lineHeight": "28px", "fontWeight": "700" }],
+            "headline-md": ["18px", { "lineHeight": "24px", "fontWeight": "600" }],
+            "headline-xl": ["32px", { "lineHeight": "38px", "fontWeight": "700" }],
+            "headline-xl-mobile": ["26px", { "lineHeight": "32px", "fontWeight": "700" }]
+          }
+        }
+      }
+    };
+  </script>
+<style>
+    /* Custom HUD styling and animations */
+    .hud-glow-cyan {
+      box-shadow: 0 0 12px rgba(0, 229, 255, 0.45);
+    }
+    .hud-glow-orange {
+      box-shadow: 0 0 16px rgba(254, 107, 0, 0.55);
+    }
+    .hud-glow-green {
+      box-shadow: 0 0 10px rgba(34, 239, 126, 0.45);
+    }
+    .hud-text-glow-cyan {
+      text-shadow: 0 0 8px rgba(0, 229, 255, 0.6);
+    }
+    .hud-text-glow-orange {
+      text-shadow: 0 0 8px rgba(254, 107, 0, 0.8);
+    }
+
+    /* Clipped military chamfers */
+    .clip-chamfer-corner {
+      clip-path: polygon(0 0, calc(100% - 10px) 0, 100% 10px, 100% 100%, 10px 100%, 0 calc(100% - 10px));
+    }
+    .clip-chamfer-btn {
+      clip-path: polygon(12px 0, 100% 0, 100% calc(100% - 12px), calc(100% - 12px) 100%, 0 100%, 0 12px);
+    }
+
+    /* Scanline pattern overlay */
+    .scanlines {
+      background: linear-gradient(
+        to bottom,
+        rgba(255,255,255,0),
+        rgba(255,255,255,0) 50%,
+        rgba(0, 229, 255, 0.03) 50%,
+        rgba(0, 229, 255, 0.03)
+      );
+      background-size: 100% 4px;
+    }
+
+    /* Radar sweep animation */
+    @keyframes sweep {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+    .radar-sweep {
+      animation: sweep 4s linear infinite;
+    }
+
+    /* Blinking Lock-On animation */
+    @keyframes pulse-lock {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.65; transform: scale(1.04); }
+    }
+    .animate-lock {
+      animation: pulse-lock 0.8s ease-in-out infinite;
+    }
+
+    /* Micro thruster fire pulse */
+    @keyframes flame-pulse {
+      0%, 100% { transform: scale(1); filter: drop-shadow(0 0 8px #fe6b00); }
+      50% { transform: scale(1.08); filter: drop-shadow(0 0 16px #fe6b00); }
+    }
+    .animate-flame {
+      animation: flame-pulse 0.6s ease-in-out infinite alternate;
+    }
+  </style>
+</head>
+<body class="bg-surface text-on-surface m-0 p-0 overflow-hidden select-none font-body-md flex items-center justify-center min-h-screen">
+<!-- Mobile Viewport Container: 390x844 portrait frame -->
+<main class="relative w-full max-w-[390px] h-[844px] overflow-hidden bg-surface-dim border border-outline-variant/30 shadow-2xl">
+<!-- 1. FULL-BLEED 3D COMBAT VIEWPORT (Underlay) -->
+<div class="absolute inset-0 z-0">
+<img alt="Aerial Dogfight Background" class="w-full h-full object-cover object-center filter brightness-[0.9] contrast-[1.05]" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAU24xbumSHkNKpzw30OH9jfYotiylZMnaGR97Wf_pvSuRb-WREKFRR0AZJ5Hoy4-m29_XZ_WtYbVxn4lVRw7rdOZS9BZEFCiET1Mm4FbJEqdQg5u25NAR1KYOPbOf-cx-yFeaoE8bIjZoRApCAfAmbj20EU5MEJ6QjkQKnfZoFtC2ao9JpTIyZ66TToReXmDwpqWcp5TLywqntQqCqcvcSmcK_uBNw-G2VNRG739ZtCM_Q1QSiMc1kW2Z7d6bst1Z1pT1-C3nduhM"/>
+<!-- Tactical Cockpit Vignette & Horizon Tint -->
+<div class="absolute inset-0 bg-gradient-to-t from-surface-dim/90 via-transparent to-surface-dim/75 pointer-events-none"></div>
+<div class="absolute inset-0 scanlines pointer-events-none opacity-60"></div>
+<!-- Radial combat HUD mesh grid -->
+<div class="absolute inset-0 bg-[radial-gradient(circle_at_center,transparent_40%,rgba(12,19,32,0.8)_95%)] pointer-events-none"></div>
+</div>
+<!-- 2. TOP COMBAT HUD BAR (Fixed Cluster, z-30) -->
+<header class="absolute top-0 left-0 w-full z-30 pt-3 px-3 pointer-events-auto">
+<!-- System Bar Tagline -->
+<div class="flex items-center justify-between text-outline text-[8px] font-label-sm tracking-widest uppercase mb-1 px-1">
+<span class="flex items-center gap-1 text-primary-container">
+<span class="w-1.5 h-1.5 rounded-full bg-primary-container inline-block animate-ping"></span>
+          SYS.TAC // TAC-01 ACTIVE
+        </span>
+<span class="tracking-widest">ENCRYPTED SAT-LINK 98.4%</span>
+<span class="text-tertiary-container font-bold">LAT: 34°12'N</span>
+</div>
+<div class="flex items-stretch justify-between gap-1.5">
+<!-- Left: Score Card & Multiplier -->
+<div class="flex-1 bg-surface-container-low/85 backdrop-blur-md border border-primary-container/40 p-1.5 rounded-sm relative">
+<!-- Tactical Corner L-Brackets -->
+<div class="absolute -top-[1px] -left-[1px] w-1.5 h-1.5 border-t border-l border-primary-container"></div>
+<div class="absolute -bottom-[1px] -right-[1px] w-1.5 h-1.5 border-b border-r border-primary-container"></div>
+<div class="flex items-center justify-between">
+<span class="font-label-sm text-outline uppercase tracking-wider text-[8px]">SCORE // COMBAT</span>
+<!-- Gold Multiplier Badge -->
+<span class="bg-[#FFB800]/20 border border-[#FFB800] text-[#FFB800] px-1 py-0.2 rounded-xs font-label-sm text-[8px] font-bold">
+              x4 COMBO
+            </span>
+</div>
+<div class="font-headline-md text-headline-md text-primary-container hud-text-glow-cyan leading-tight mt-0.5 tracking-tight font-extrabold">
+            128,450
+          </div>
+<div class="flex items-center gap-1 text-[8px] font-label-sm text-tertiary-container mt-0.5">
+<span class="material-symbols-outlined text-[10px]" style="font-variation-settings: 'FILL' 1;">trending_up</span>
+<span>+1,250 AIR SUPERIORITY</span>
+</div>
+</div>
+<!-- Center: Mission Objective HUD -->
+<a href="victory-modal.html" title="Finish Mission" class="w-[145px] bg-surface-container-low/85 backdrop-blur-md border border-outline-variant/60 hover:border-primary-container p-1.5 rounded-sm flex flex-col justify-between transition-colors">
+<div class="flex items-center justify-between">
+<span class="font-label-sm text-[8px] text-secondary font-bold tracking-wider">OBJ // PRIMARY</span>
+<span class="bg-secondary-container/20 border border-secondary-container text-secondary text-[8px] px-1 font-label-sm rounded-xs">
+              WAVE 03/04
+            </span>
+</div>
+<div class="my-0.5">
+<div class="flex justify-between items-baseline">
+<span class="font-headline-md text-[10px] text-on-surface font-bold uppercase tracking-tight">DESTROY BASE</span>
+<span class="font-label-sm text-[10px] font-bold text-secondary-container hud-text-glow-orange">40%</span>
+</div>
+<!-- Segmented Progress Bar -->
+<div class="w-full bg-surface-variant h-1.5 rounded-xs mt-0.5 flex gap-0.5 p-[1px]">
+<div class="w-[40%] bg-secondary-container rounded-xs hud-glow-orange"></div>
+<div class="flex-1 bg-outline-variant/30 rounded-xs"></div>
+</div>
+</div>
+<div class="text-[8px] font-label-sm text-outline flex justify-between">
+<span>DEF: 02 REMAINING</span>
+<span class="text-primary-container">T-04:18</span>
+</div>
+</a>
+<!-- Right: Status Metrics & Pause Actuator -->
+<div class="flex flex-col gap-1 w-[80px]">
+<!-- Integrity Bars -->
+<div class="bg-surface-container-low/85 backdrop-blur-md border border-outline-variant/40 p-1 rounded-sm">
+<!-- Hull Integrity -->
+<div class="mb-1">
+<div class="flex justify-between text-[7px] font-label-sm uppercase">
+<span class="text-tertiary">HULL</span>
+<span class="text-tertiary-container font-bold">88%</span>
+</div>
+<div class="w-full bg-surface-variant h-1 rounded-xs overflow-hidden mt-0.5">
+<div class="w-[88%] h-full bg-tertiary-container hud-glow-green"></div>
+</div>
+</div>
+<!-- Energy Shield -->
+<div>
+<div class="flex justify-between text-[7px] font-label-sm uppercase">
+<span class="text-primary-container">SHLD</span>
+<span class="text-primary-container font-bold">100%</span>
+</div>
+<div class="w-full bg-surface-variant h-1 rounded-xs overflow-hidden mt-0.5">
+<div class="w-full h-full bg-primary-container hud-glow-cyan"></div>
+</div>
+</div>
+</div>
+<!-- Tactical Pause Actuator -->
+<button id="btn-pause" aria-label="Pause Tactical Simulation" class="flex items-center justify-center gap-1 bg-surface-container/90 hover:bg-surface-bright active:scale-95 border border-primary-container/40 text-primary-container py-1 rounded-sm transition-all cursor-pointer">
+<span class="material-symbols-outlined text-[13px]">pause</span>
+<span class="font-label-sm text-[8px] font-bold tracking-widest">TAC</span>
+</button>
+</div>
+</div>
+<!-- Top Tactical Alert Ticker -->
+<div class="mt-1.5 bg-surface-container-lowest/80 backdrop-blur-sm border-l-2 border-primary-container px-2 py-0.5 flex items-center justify-between text-[8px] font-label-sm text-primary">
+<div class="flex items-center gap-1 truncate">
+<span class="material-symbols-outlined text-secondary-container text-[11px] animate-pulse">crisis_alert</span>
+<span class="text-secondary font-bold tracking-wider">RADAR:</span>
+<span class="text-on-surface-variant truncate">INCOMING FLARES CLEARED // AIR SUPERIORITY CONTESTED</span>
+</div>
+<span class="text-outline text-[7px] shrink-0 font-mono">BOGIE: 05</span>
+</div>
+</header>
+<!-- 3. MID-SCREEN FLIGHT AVIONICS & TACTICAL HUD (Dynamic HUD Overlay, z-20) -->
+<div class="absolute inset-0 z-20 pointer-events-none flex flex-col justify-between pt-28 pb-48 px-2">
+<!-- Center Artificial Horizon & Target Reticles Canvas -->
+<div class="relative w-full h-full flex items-center justify-center">
+<!-- Altitude & Speed Peripheral Flight Ladders (Left Wing) -->
+<div class="absolute left-1 top-1/2 -translate-y-1/2 flex flex-col items-start gap-1 font-label-sm text-[9px] text-primary-container/90">
+<!-- Speed Tape Box -->
+<div class="bg-surface-container-low/80 border border-primary-container/30 px-1.5 py-1 rounded-xs backdrop-blur-xs">
+<span class="text-[7px] text-outline block leading-none">AIR SPEED</span>
+<span class="text-label-lg font-headline-md text-primary-container font-bold hud-text-glow-cyan">M 2.25</span>
+<span class="text-[8px] text-tertiary-container block">MACH LOCK</span>
+</div>
+<!-- Vertical Pitch Scale Ladder -->
+<div class="h-28 border-l border-dashed border-primary-container/50 pl-1.5 flex flex-col justify-between py-1 my-1">
+<div class="flex items-center gap-1 text-[8px] text-outline">
+<span class="w-2 h-[1px] bg-primary-container inline-block"></span> +20°
+            </div>
+<div class="flex items-center gap-1 text-[8px] text-primary font-bold">
+<span class="w-3.5 h-[1.5px] bg-primary-container inline-block"></span> +10°
+            </div>
+<div class="flex items-center gap-1 text-[9px] text-tertiary-container font-extrabold">
+<span class="w-5 h-[2px] bg-tertiary-container inline-block"></span> 00° LEVEL
+            </div>
+<div class="flex items-center gap-1 text-[8px] text-primary font-bold">
+<span class="w-3.5 h-[1.5px] bg-primary-container inline-block"></span> -10°
+            </div>
+<div class="flex items-center gap-1 text-[8px] text-outline">
+<span class="w-2 h-[1px] bg-primary-container inline-block"></span> -20°
+            </div>
+</div>
+<!-- G-Meter -->
+<div class="bg-surface-container-low/80 border border-outline-variant/50 px-1.5 py-0.5 rounded-xs">
+<span class="text-[7px] text-outline block leading-none">G-LOAD</span>
+<span class="text-[10px] font-bold text-secondary-container">7.2 G</span>
+</div>
+</div>
+<!-- Altitude Ladder & Radar Scope (Right Wing) -->
+<div class="absolute right-1 top-1/2 -translate-y-1/2 flex flex-col items-end gap-1 font-label-sm text-[9px] text-primary-container/90">
+<!-- Barometric Altitude Tape -->
+<div class="bg-surface-container-low/80 border border-primary-container/30 px-1.5 py-1 rounded-xs backdrop-blur-xs text-right">
+<span class="text-[7px] text-outline block leading-none">BARO ALT</span>
+<span class="text-label-lg font-headline-md text-primary-container font-bold hud-text-glow-cyan">24,800</span>
+<span class="text-[8px] text-tertiary-container block">FT ASL</span>
+</div>
+<!-- Mini 2D Tactical Radar Pod -->
+<div class="w-16 h-16 rounded-full border border-primary-container/40 bg-surface-container-lowest/80 relative overflow-hidden my-1 backdrop-blur-xs flex items-center justify-center">
+<!-- Radar cross lines -->
+<div class="absolute w-full h-[1px] bg-primary-container/20"></div>
+<div class="absolute h-full w-[1px] bg-primary-container/20"></div>
+<div class="w-10 h-10 rounded-full border border-primary-container/25"></div>
+<!-- Radar Rotating Sweep -->
+<div class="absolute inset-0 radar-sweep bg-gradient-to-tr from-transparent via-transparent to-primary-container/20 pointer-events-none rounded-full"></div>
+<!-- Blips: Hostile Orange, Friendly Green -->
+<div class="absolute top-3 left-4 w-1.5 h-1.5 rounded-full bg-secondary-container hud-glow-orange animate-ping"></div>
+<div class="absolute top-3 left-4 w-1.5 h-1.5 rounded-full bg-secondary-container"></div>
+<div class="absolute bottom-4 right-5 w-1.5 h-1.5 rounded-full bg-secondary-container"></div>
+<div class="absolute bottom-3 left-5 w-1 h-1 rounded-full bg-tertiary-container"></div>
+<!-- Player center chevron -->
+<span class="material-symbols-outlined text-[10px] text-primary-container" style="font-variation-settings: 'FILL' 1;">navigation</span>
+</div>
+<!-- Climb Rate / VVI -->
+<div class="bg-surface-container-low/80 border border-outline-variant/50 px-1.5 py-0.5 rounded-xs text-right">
+<span class="text-[7px] text-outline block leading-none">VVI CLIMB</span>
+<span class="text-[10px] font-bold text-tertiary-container">+450 FPM</span>
+</div>
+</div>
+<!-- Center Crosshair Gunsight (Cyan Computed Lead Indicator) -->
+<div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 flex items-center justify-center pointer-events-none">
+<div class="w-20 h-20 rounded-full border border-primary-container/40 flex items-center justify-center relative">
+<!-- Cross ticks -->
+<div class="absolute -top-1 w-[1.5px] h-2 bg-primary-container"></div>
+<div class="absolute -bottom-1 w-[1.5px] h-2 bg-primary-container"></div>
+<div class="absolute -left-1 h-[1.5px] w-2 bg-primary-container"></div>
+<div class="absolute -right-1 h-[1.5px] w-2 bg-primary-container"></div>
+<!-- Central Pipping reticle -->
+<div class="w-1.5 h-1.5 rounded-full bg-primary-container hud-glow-cyan"></div>
+<div class="w-6 h-6 rounded-full border border-dashed border-primary-container/50"></div>
+</div>
+</div>
+<!-- DYNAMIC ENEMY HOSTILE TARGET LOCK-ON BOX (Targeting Bogie in clouds) -->
+<div class="absolute top-[28%] left-[56%] -translate-x-1/2 -translate-y-1/2 pointer-events-none animate-lock">
+<!-- Diamond Reticle Container -->
+<div class="relative w-28 h-28 border-2 border-secondary-container/90 hud-glow-orange flex items-center justify-center">
+<!-- Corner Brackets -->
+<div class="absolute -top-1 -left-1 w-2.5 h-2.5 border-t-2 border-l-2 border-secondary-fixed-dim"></div>
+<div class="absolute -top-1 -right-1 w-2.5 h-2.5 border-t-2 border-r-2 border-secondary-fixed-dim"></div>
+<div class="absolute -bottom-1 -left-1 w-2.5 h-2.5 border-b-2 border-l-2 border-secondary-fixed-dim"></div>
+<div class="absolute -bottom-1 -right-1 w-2.5 h-2.5 border-b-2 border-r-2 border-secondary-fixed-dim"></div>
+<!-- Diamond Inset -->
+<div class="w-12 h-12 rotate-45 border border-secondary-container/60"></div>
+<!-- Center lock blip -->
+<div class="absolute w-2 h-2 bg-secondary-container rounded-xs animate-ping"></div>
+<!-- Target Identification Readout -->
+<div class="absolute -top-7 left-0 bg-surface-container-lowest/90 border border-secondary-container px-1 py-0.2 rounded-xs whitespace-nowrap">
+<span class="text-[8px] font-label-sm font-bold text-secondary-container hud-text-glow-orange">
+                LOCK // SU-57 BOGIE-01
+              </span>
+</div>
+<!-- Distance and TONE Status Banner -->
+<div class="absolute -bottom-9 left-0 flex flex-col items-start bg-surface-container-lowest/90 border-l-2 border-secondary-container px-1.5 py-0.5 text-[8px] font-label-sm whitespace-nowrap">
+<div class="flex items-center gap-1.5">
+<span class="text-on-surface font-bold">RNG 420M</span>
+<span class="text-secondary-container font-extrabold animate-pulse">TONE ACQUIRED</span>
+</div>
+<span class="text-[7px] text-tertiary-container tracking-wider">SOLUTION: OPTIMAL FOX-2</span>
+</div>
+</div>
+</div>
+<!-- Allied Flight Leader Indicator (In distance) -->
+<div class="absolute top-[22%] left-[24%] pointer-events-none">
+<div class="w-6 h-6 border border-primary-container/70 rounded-xs flex items-center justify-center">
+<div class="w-1 h-1 bg-primary-container rounded-full"></div>
+</div>
+<span class="text-[7px] font-label-sm text-primary-container block mt-0.5 bg-surface-container-lowest/70 px-0.5">
+            ALLIED // F-22A (LEAD)
+          </span>
+</div>
+</div>
+</div>
+<!-- 4. BOTTOM ERGONOMIC COMBAT CONTROLS OVERLAY (Thumb-Zone, z-30) -->
+<footer class="absolute bottom-0 left-0 w-full z-30 pb-4 pt-2 px-3 bg-gradient-to-t from-surface-lowest via-surface-dim/80 to-transparent pointer-events-auto">
+<!-- Cockpit Sub-Telemetry Indicator strip -->
+<div class="flex items-center justify-between text-[8px] font-label-sm text-outline border-b border-outline-variant/30 pb-1 mb-2 px-1">
+<span class="flex items-center gap-1">
+<span class="material-symbols-outlined text-[10px] text-tertiary-container">check_circle</span>
+          WEAPONS SYS: ARMED // AMRAAM ACTIVE
+        </span>
+<span class="text-primary-container font-mono">CHAFF: 18 // FLR: 24</span>
+</div>
+<div class="flex items-end justify-between gap-2">
+<!-- LEFT CONTROL: Virtual Flight Joystick Yoke -->
+<div class="flex flex-col items-center">
+<div aria-label="Virtual Flight Joystick" class="relative w-24 h-24 rounded-full bg-surface-container-low/70 border-2 border-primary-container/40 backdrop-blur-md flex items-center justify-center touch-none cursor-pointer active:border-primary-container transition-all" id="virtual-yoke">
+<!-- Crosshairs & Angle ticks -->
+<div class="absolute inset-0 flex items-center justify-center pointer-events-none">
+<div class="w-full h-[1px] bg-primary-container/20"></div>
+<div class="h-full w-[1px] bg-primary-container/20"></div>
+<div class="w-16 h-16 rounded-full border border-primary-container/25"></div>
+</div>
+<!-- Directional arrow ticks -->
+<span class="material-symbols-outlined text-outline text-[12px] absolute top-1 pointer-events-none">arrow_drop_up</span>
+<span class="material-symbols-outlined text-outline text-[12px] absolute bottom-1 pointer-events-none">arrow_drop_down</span>
+<span class="material-symbols-outlined text-outline text-[12px] absolute left-1 pointer-events-none">arrow_left</span>
+<span class="material-symbols-outlined text-outline text-[12px] absolute right-1 pointer-events-none">arrow_right</span>
+<!-- Center thumb control knob -->
+<div class="w-9 h-9 rounded-full bg-gradient-to-b from-primary to-inverse-primary border border-primary-container hud-glow-cyan flex items-center justify-center shadow-lg transition-transform" id="yoke-knob">
+<div class="w-2.5 h-2.5 rounded-full bg-surface-dim"></div>
+</div>
+</div>
+<span class="text-[8px] font-label-sm uppercase tracking-wider text-outline mt-1 font-bold">FLIGHT YOKE</span>
+</div>
+<!-- CENTER CONTROL: High-Visibility Afterburner / Overdrive Capsule -->
+<div class="flex flex-col items-center pb-1">
+<button aria-label="Engage Afterburner Overdrive" class="relative group w-14 h-20 rounded-full bg-gradient-to-b from-secondary-container via-on-secondary to-surface-dim border-2 border-secondary-container hud-glow-orange flex flex-col items-center justify-between py-2 active:scale-95 transition-transform" id="btn-afterburner">
+<!-- Overdrive Charge level indicator ring/dot -->
+<span class="text-[7px] font-label-sm font-extrabold text-on-secondary-fixed bg-secondary-fixed px-1 rounded-full">
+              92%
+            </span>
+<!-- Pulsing Flame Icon -->
+<span class="material-symbols-outlined text-surface-dim text-[26px] animate-flame" style="font-variation-settings: 'FILL' 1;">
+              local_fire_department
+            </span>
+<span class="font-label-sm text-[7px] font-extrabold text-secondary tracking-tighter uppercase leading-none">
+              OVERDRIVE
+            </span>
+</button>
+<span class="text-[8px] font-label-sm uppercase tracking-wider text-secondary-container mt-1 font-bold hud-text-glow-orange">
+            AFTERBURNER
+          </span>
+</div>
+<!-- RIGHT WEAPONS CONTROL CLUSTER: Fire, Flares, Cannon -->
+<div class="flex items-end gap-1.5">
+<!-- Secondary Column: 20MM Cannon & Chaff/Flares -->
+<div class="flex flex-col gap-1.5 items-center">
+<!-- Quick Fire 20MM Vulcan Cannon -->
+<button aria-label="Fire 20mm Vulcan Cannon" class="w-11 h-11 rounded-full bg-surface-container-high/85 border border-primary-container/60 hover:bg-surface-bright active:scale-90 flex flex-col items-center justify-center p-0.5 transition-all" id="btn-cannon">
+<span class="material-symbols-outlined text-primary-container text-[16px]">adjust</span>
+<span class="text-[6px] font-label-sm font-bold text-outline uppercase leading-none">20MM</span>
+<span class="text-[6px] font-mono text-tertiary-container font-bold leading-none">850</span>
+</button>
+<!-- Defensive Chaff / Flares -->
+<button aria-label="Deploy Chaff and Flares" class="w-12 h-12 rounded-full bg-surface-container-low/90 border-2 border-primary-container hud-glow-cyan active:scale-90 flex flex-col items-center justify-center transition-all" id="btn-flares">
+<span class="material-symbols-outlined text-primary-container text-[18px]">security</span>
+<span class="text-[6px] font-label-sm font-bold text-primary-container uppercase leading-none mt-0.5">FLARE</span>
+<span class="text-[6px] font-label-sm text-tertiary-container font-bold leading-none">READY</span>
+</button>
+<span class="text-[7px] font-label-sm text-outline font-semibold">SHIELD</span>
+</div>
+<!-- Primary Missile Weapon Launch Button (FOX 2) -->
+<div class="flex flex-col items-center">
+<button aria-label="Launch AMRAAM Missile" class="relative w-20 h-20 rounded-full bg-gradient-to-br from-secondary-container/90 via-on-secondary to-surface-lowest border-2 border-secondary-fixed-dim hud-glow-orange flex flex-col items-center justify-center active:scale-95 transition-all" id="btn-missile">
+<!-- Target Acquisition Lock Aura Ring -->
+<div class="absolute inset-0 rounded-full border border-dashed border-secondary-fixed-dim animate-spin" style="animation-duration: 8s;"></div>
+<div class="flex items-center justify-center gap-0.5">
+<span class="material-symbols-outlined text-surface-dim text-[24px] font-bold" style="font-variation-settings: 'FILL' 1;">
+                  rocket_launch
+                </span>
+</div>
+<span class="font-headline-md text-surface-dim text-[11px] font-extrabold tracking-wider leading-none mt-0.5">
+                FOX 2
+              </span>
+<span class="bg-surface-dim/90 text-secondary border border-secondary/40 text-[7px] font-label-sm px-1 py-0.2 rounded-xs mt-1">
+                AMRAAM x4
+              </span>
+</button>
+<span class="text-[8px] font-label-sm uppercase tracking-wider text-secondary font-bold mt-1 hud-text-glow-orange">
+              FIRE MISSILE
+            </span>
+</div>
+</div>
+</div>
+</footer>
+
+<div id="pause-overlay" class="hidden absolute inset-0 z-50 bg-surface-container-lowest/85 backdrop-blur-md flex items-center justify-center p-6">
+  <div class="w-full max-w-[300px] bg-surface-container-low border border-primary-container/60 p-5 rounded-sm relative shadow-[0_0_30px_rgba(0,229,255,0.25)]">
+    <div class="text-center mb-4">
+      <span class="font-label-sm text-[9px] text-primary-container tracking-widest uppercase">// MISSION PAUSED</span>
+      <h2 class="font-headline-lg text-on-surface font-extrabold uppercase mt-1">TACTICAL HOLD</h2>
+    </div>
+    <div class="flex flex-col gap-2.5">
+      <button id="btn-resume" class="w-full py-2.5 rounded-full bg-primary-container text-on-primary font-headline-md text-[13px] font-bold uppercase tracking-wider cursor-pointer">RESUME SORTIE</button>
+      <a href="victory-modal.html" class="w-full py-2.5 rounded-full bg-secondary-container text-white text-center font-headline-md text-[13px] font-bold uppercase tracking-wider">COMPLETE MISSION</a>
+      <a href="index.html" class="w-full py-2.5 rounded-full bg-surface-container-high border border-outline-variant text-on-surface text-center font-headline-md text-[13px] font-bold uppercase tracking-wider">RETURN TO HANGAR</a>
+    </div>
+  </div>
+</div>
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    const pauseBtn = document.getElementById('btn-pause');
+    const resumeBtn = document.getElementById('btn-resume');
+    const overlay = document.getElementById('pause-overlay');
+    if (pauseBtn && overlay) pauseBtn.addEventListener('click', () => overlay.classList.remove('hidden'));
+    if (resumeBtn && overlay) resumeBtn.addEventListener('click', () => overlay.classList.add('hidden'));
+  });
+</script>
+</main>
+<!-- Interactive Script for Touch/Click Feedback -->
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+      // Yoke interaction
+      const yoke = document.getElementById('virtual-yoke');
+      const knob = document.getElementById('yoke-knob');
+      
+      if (yoke && knob) {
+        const handleMove = (e) => {
+          const rect = yoke.getBoundingClientRect();
+          const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+          const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+          
+          let dx = clientX - (rect.left + rect.width / 2);
+          let dy = clientY - (rect.top + rect.height / 2);
+          const maxDist = 26;
+          const dist = Math.sqrt(dx * dx + dy * dy);
+          
+          if (dist > maxDist) {
+            dx = (dx / dist) * maxDist;
+            dy = (dy / dist) * maxDist;
+          }
+          knob.style.transform = `translate(${dx}px, ${dy}px)`;
+        };
+
+        const resetYoke = () => {
+          knob.style.transform = 'translate(0px, 0px)';
+        };
+
+        yoke.addEventListener('pointerdown', (e) => {
+          yoke.setPointerCapture(e.pointerId);
+          handleMove(e);
+          const onMove = (ev) => handleMove(ev);
+          const onUp = (ev) => {
+            resetYoke();
+            yoke.removeEventListener('pointermove', onMove);
+            yoke.removeEventListener('pointerup', onUp);
+          };
+          yoke.addEventListener('pointermove', onMove);
+          yoke.addEventListener('pointerup', onUp);
+        });
+      }
+
+      // Weapons actuation feedback
+      const missileBtn = document.getElementById('btn-missile');
+      if (missileBtn) {
+        missileBtn.addEventListener('click', () => {
+          missileBtn.classList.add('scale-90', 'brightness-150');
+          setTimeout(() => {
+            missileBtn.classList.remove('scale-90', 'brightness-150');
+          }, 150);
+        });
+      }
+
+      const burnerBtn = document.getElementById('btn-afterburner');
+      if (burnerBtn) {
+        burnerBtn.addEventListener('click', () => {
+          burnerBtn.classList.toggle('ring-4');
+          burnerBtn.classList.toggle('ring-secondary');
+        });
+      }
+    });
+  </script>
+</body></html>

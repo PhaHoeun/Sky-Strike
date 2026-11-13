@@ -1,0 +1,85 @@
+{
+  "name": "projects/3612790780372566216",
+  "projectId": "3612790780372566216",
+  "title": "Sky Strike - Aerial Combat Mobile UI Flow",
+  "visibility": "PRIVATE",
+  "createTime": "2026-11-11T05:57:51.795233Z",
+  "updateTime": "2026-11-11T06:33:18.000000Z",
+  "projectType": "PROJECT_DESIGN",
+  "origin": "MCP",
+  "deviceType": "MOBILE",
+  "designSystemAsset": "assets/e638dd014a504b22a4402afb91e2c202",
+  "designTheme": {
+    "colorMode": "DARK",
+    "headlineFont": "SPACE_GROTESK",
+    "bodyFont": "JETBRAINS_MONO",
+    "labelFont": "JETBRAINS_MONO",
+    "roundness": "ROUND_EIGHT",
+    "customColor": "#00e5ff",
+    "colorVariant": "FIDELITY",
+    "overridePrimaryColor": "#00e5ff",
+    "overrideSecondaryColor": "#ff6b00",
+    "overrideTertiaryColor": "#00e676",
+    "overrideNeutralColor": "#0a111e",
+    "spacingScale": 2
+  },
+  "screens": {
+    "index": {
+      "id": "a734624e006e40759ed86c900eb98f04",
+      "sourceScreen": "projects/3612790780372566216/screens/a734624e006e40759ed86c900eb98f04",
+      "x": 1600,
+      "y": 0,
+      "width": 390,
+      "height": 884,
+      "label": "Hangar - Jet Select HUD"
+    },
+    "asset_hangar_jet": {
+      "id": "16dc2ce321d348ddb0640617adb91f0b",
+      "sourceScreen": "projects/3612790780372566216/screens/16dc2ce321d348ddb0640617adb91f0b",
+      "x": 1024,
+      "y": 0,
+      "width": 512,
+      "height": 382,
+      "label": "3D Stealth Fighter Jet (F-22 Raptor) Hangar Render"
+    },
+    "gameplay-hud": {
+      "id": "0151f8efd76e4871944a7bef9fc560bd",
+      "sourceScreen": "projects/3612790780372566216/screens/0151f8efd76e4871944a7bef9fc560bd",
+      "x": 576,
+      "y": 1140,
+      "width": 390,
+      "height": 884,
+      "label": "Combat HUD - Aerial Dogfight"
+    },
+    "asset_dogfight_scene": {
+      "id": "ec2708641624446db36f7e4835df2ec5",
+      "sourceScreen": "projects/3612790780372566216/screens/ec2708641624446db36f7e4835df2ec5",
+      "x": 0,
+      "y": 1140,
+      "width": 512,
+      "height": 917,
+      "label": "3D Aerial Dogfight Cloudscape Backdrop"
+    },
+    "victory-modal": {
+      "id": "a3d44298db0b42499368ff6fd0d533f5",
+      "sourceScreen": "projects/3612790780372566216/screens/a3d44298db0b42499368ff6fd0d533f5",
+      "x": 0,
+      "y": 2100,
+      "width": 390,
+      "height": 884,
+      "label": "Victory Modal - Mission Accomplished"
+    },
+    "hangar-upgrade": {
+      "id": "eee78038f35e494ca3bf8ba13227c9aa",
+      "sourceScreen": "projects/3612790780372566216/screens/eee78038f35e494ca3bf8ba13227c9aa",
+      "x": 576,
+      "y": 2100,
+      "width": 390,
+      "height": 884,
+      "label": "Hangar Upgrade & Engineering HUD - Final Polish"
+    }
+  },
+  "metadata": {
+    "userRole": "OWNER"
+  }
+}

@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html class="dark" lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Sky Strike — Complete 4-Screen Mobile UI/UX Flow</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Space+Grotesk:wght@600;700;800&display=swap" rel="stylesheet" />
+  <style>
+    body {
+      background: radial-gradient(circle at 50% 0%, #152238 0%, #070e1b 65%);
+      font-family: 'Space Grotesk', sans-serif;
+    }
+    .mono { font-family: 'JetBrains Mono', monospace; }
+    .phone-bezel {
+      width: 410px;
+      height: 864px;
+      border-radius: 38px;
+      padding: 10px;
+      background: linear-gradient(145deg, #273449 0%, #0e1726 50%, #1d283a 100%);
+      box-shadow: 0 25px 60px rgba(0, 0, 0, 0.7), 0 0 28px rgba(0, 229, 255, 0.14);
+      border: 1px solid rgba(0, 229, 255, 0.25);
+    }
+    .phone-screen {
+      width: 100%;
+      height: 100%;
+      border-radius: 28px;
+      overflow: hidden;
+      background: #0c1320;
+    }
+    .phone-scale-wrap {
+      transform-origin: top center;
+    }
+  </style>
+</head>
+<body class="text-[#dce2f5] min-h-screen px-6 py-8">
+  <header class="max-w-[1720px] mx-auto mb-8 flex flex-wrap items-center justify-between gap-4 border-b border-[#3b494c]/50 pb-5">
+    <div>
+      <div class="mono text-[11px] uppercase tracking-[0.22em] text-[#00e5ff]">// APEX AVIONICS HUD — STITCH BUILD LOOP</div>
+      <h1 class="text-2xl sm:text-3xl font-extrabold uppercase tracking-wider mt-1">Sky Strike — 3D Aerial Combat Mobile UI Flow</h1>
+      <p class="mono text-xs text-[#849396] mt-1">4 interactive 9:16 portrait smartphone screens (390×844) • Project ID: 3612790780372566216</p>
+    </div>
+    <div class="flex flex-wrap gap-2 mono text-xs">
+      <a href="index.html" class="px-3.5 py-2 rounded-full bg-[#ff6b00]/20 border border-[#ff6b00] text-[#ffb693] hover:bg-[#ff6b00] hover:text-white transition">01. Hangar</a>
+      <a href="gameplay-hud.html" class="px-3.5 py-2 rounded-full bg-[#00e5ff]/15 border border-[#00e5ff]/60 text-[#00e5ff] hover:bg-[#00e5ff] hover:text-[#070e1b] transition">02. Dogfight HUD</a>
+      <a href="victory-modal.html" class="px-3.5 py-2 rounded-full bg-[#ffb800]/15 border border-[#ffb800]/60 text-[#ffe082] hover:bg-[#ffb800] hover:text-[#070e1b] transition">03. Victory Modal</a>
+      <a href="hangar-upgrade.html" class="px-3.5 py-2 rounded-full bg-[#00e676]/15 border border-[#00e676]/60 text-[#62ff96] hover:bg-[#00e676] hover:text-[#070e1b] transition">04. Engineering</a>
+    </div>
+  </header>
+
+  <main class="max-w-[1720px] mx-auto grid grid-cols-1 md:grid-cols-2 2xl:grid-cols-4 gap-8 justify-items-center">
+    <section class="flex flex-col items-center">
+      <div class="mb-3 flex items-center justify-between w-[390px] px-2">
+        <span class="mono text-xs font-bold text-[#00e5ff] tracking-widest uppercase">01 // Hangar & Jet Select</span>
+        <a href="index.html" class="mono text-[11px] text-[#849396] hover:text-[#00e5ff] underline">Open Full</a>
+      </div>
+      <div class="phone-bezel">
+        <div class="phone-screen">
+          <iframe src="index.html" title="Hangar / Jet Select Screen" class="w-full h-full border-0"></iframe>
+        </div>
+      </div>
+    </section>
+
+    <section class="flex flex-col items-center">
+      <div class="mb-3 flex items-center justify-between w-[390px] px-2">
+        <span class="mono text-xs font-bold text-[#ff6b00] tracking-widest uppercase">02 // Active Dogfight HUD</span>
+        <a href="gameplay-hud.html" class="mono text-[11px] text-[#849396] hover:text-[#00e5ff] underline">Open Full</a>
+      </div>
+      <div class="phone-bezel">
+        <div class="phone-screen">
+          <iframe src="gameplay-hud.html" title="Active 3D Dogfight Gameplay HUD" class="w-full h-full border-0"></iframe>
+        </div>
+      </div>
+    </section>
+
+    <section class="flex flex-col items-center">
+      <div class="mb-3 flex items-center justify-between w-[390px] px-2">
+        <span class="mono text-xs font-bold text-[#ffb800] tracking-widest uppercase">03 // Victory Debrief Modal</span>
+        <a href="victory-modal.html" class="mono text-[11px] text-[#849396] hover:text-[#00e5ff] underline">Open Full</a>
+      </div>
+      <div class="phone-bezel">
+        <div class="phone-screen">
+          <iframe src="victory-modal.html" title="Mission Accomplished Victory Modal" class="w-full h-full border-0"></iframe>
+        </div>
+      </div>
+    </section>
+
+    <section class="flex flex-col items-center">
+      <div class="mb-3 flex items-center justify-between w-[390px] px-2">
+        <span class="mono text-xs font-bold text-[#00e676] tracking-widest uppercase">04 // Blueprint Engineering</span>
+        <a href="hangar-upgrade.html" class="mono text-[11px] text-[#849396] hover:text-[#00e5ff] underline">Open Full</a>
+      </div>
+      <div class="phone-bezel">
+        <div class="phone-screen">
+          <iframe src="hangar-upgrade.html" title="Hangar Upgrade and Engineering Screen" class="w-full h-full border-0"></iframe>
+        </div>
+      </div>
+    </section>
+  </main>
+</body>
+</html>

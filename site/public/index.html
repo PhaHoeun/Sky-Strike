@@ -1,0 +1,508 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" name="viewport"/>
+<title>AVIONICS // TAC-01 - Hangar</title>
+<!-- Fonts -->
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&amp;family=Space+Grotesk:wght@500;600;700;800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<!-- Tailwind CSS -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          "colors": {
+            "on-tertiary-fixed-variant": "#005226",
+            "on-primary-fixed": "#001f24",
+            "on-primary-fixed-variant": "#004f58",
+            "secondary": "#ffb693",
+            "inverse-surface": "#dce2f5",
+            "on-secondary-container": "#572000",
+            "surface-container-low": "#151c29",
+            "inverse-on-surface": "#2a303f",
+            "on-primary-container": "#00626e",
+            "error": "#ffb4ab",
+            "surface-container": "#19202d",
+            "on-surface-variant": "#bac9cc",
+            "surface-dim": "#0c1320",
+            "tertiary": "#b1ffbf",
+            "surface": "#0c1320",
+            "on-background": "#dce2f5",
+            "on-error-container": "#ffdad6",
+            "error-container": "#93000a",
+            "outline-variant": "#3b494c",
+            "on-tertiary-fixed": "#00210b",
+            "secondary-fixed": "#ffdbcc",
+            "surface-variant": "#2e3543",
+            "primary-fixed-dim": "#00daf3",
+            "tertiary-container": "#22ef7e",
+            "tertiary-fixed-dim": "#00e475",
+            "on-secondary-fixed": "#351000",
+            "on-secondary": "#561f00",
+            "surface-bright": "#323948",
+            "secondary-container": "#fe6b00",
+            "surface-container-lowest": "#070e1b",
+            "primary-container": "#00e5ff",
+            "surface-tint": "#00daf3",
+            "primary-fixed": "#9cf0ff",
+            "secondary-fixed-dim": "#ffb693",
+            "background": "#0c1320",
+            "on-tertiary-container": "#006731",
+            "on-surface": "#dce2f5",
+            "inverse-primary": "#006875",
+            "on-secondary-fixed-variant": "#7a3000",
+            "outline": "#849396",
+            "surface-container-high": "#232a38",
+            "tertiary-fixed": "#62ff96",
+            "on-primary": "#00363d",
+            "on-error": "#690005",
+            "on-tertiary": "#003918",
+            "primary": "#c3f5ff",
+            "surface-container-highest": "#2e3543"
+          },
+          "borderRadius": {
+            "DEFAULT": "0.25rem",
+            "lg": "0.5rem",
+            "xl": "0.75rem",
+            "full": "9999px"
+          },
+          "spacing": {
+            "margin": "1.25rem",
+            "space-lg": "1rem",
+            "gutter-mobile": "0.5rem",
+            "space-sm": "0.5rem",
+            "gutter": "0.75rem",
+            "space-md": "0.75rem",
+            "margin-mobile": "0.75rem",
+            "space-xl": "1.5rem",
+            "space-xs": "0.25rem"
+          },
+          "fontFamily": {
+            "label-lg": ["JetBrains Mono"],
+            "headline-md": ["Space Grotesk"],
+            "body-sm": ["JetBrains Mono"],
+            "headline-xl": ["Space Grotesk"],
+            "label-md": ["JetBrains Mono"],
+            "label-sm": ["JetBrains Mono"],
+            "body-md": ["JetBrains Mono"],
+            "body-lg": ["JetBrains Mono"],
+            "headline-lg": ["Space Grotesk"],
+            "headline-xl-mobile": ["Space Grotesk"]
+          },
+          "fontSize": {
+            "label-lg": ["12px", { "lineHeight": "16px", "fontWeight": "600" }],
+            "headline-md": ["18px", { "lineHeight": "24px", "fontWeight": "600" }],
+            "body-sm": ["11px", { "lineHeight": "15px", "fontWeight": "400" }],
+            "headline-xl": ["32px", { "lineHeight": "38px", "fontWeight": "700" }],
+            "label-md": ["10px", { "lineHeight": "14px", "fontWeight": "600" }],
+            "label-sm": ["9px", { "lineHeight": "12px", "fontWeight": "700" }],
+            "body-md": ["13px", { "lineHeight": "18px", "fontWeight": "400" }],
+            "body-lg": ["15px", { "lineHeight": "22px", "fontWeight": "500" }],
+            "headline-lg": ["22px", { "lineHeight": "28px", "fontWeight": "700" }],
+            "headline-xl-mobile": ["26px", { "lineHeight": "32px", "fontWeight": "700" }]
+          }
+        }
+      }
+    }
+  </script>
+<style>
+    .material-symbols-outlined {
+      font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+      display: inline-block;
+      vertical-align: middle;
+      line-height: 1;
+    }
+    
+    /* Tactical HUD Corner Reticles */
+    .hud-bracket {
+      position: relative;
+    }
+    .hud-bracket::before {
+      content: '';
+      position: absolute;
+      top: -2px;
+      left: -2px;
+      width: 8px;
+      height: 8px;
+      border-top: 1.5px solid #00e5ff;
+      border-left: 1.5px solid #00e5ff;
+      pointer-events: none;
+    }
+    .hud-bracket::after {
+      content: '';
+      position: absolute;
+      bottom: -2px;
+      right: -2px;
+      width: 8px;
+      height: 8px;
+      border-bottom: 1.5px solid #00e5ff;
+      border-right: 1.5px solid #00e5ff;
+      pointer-events: none;
+    }
+
+    /* Primary Chamfered Button Clip */
+    .clip-chamfer {
+      clip-path: polygon(10px 0, 100% 0, 100% calc(100% - 10px), calc(100% - 10px) 100%, 0 100%, 0 10px);
+    }
+    .clip-slant {
+      clip-path: polygon(0 0, calc(100% - 8px) 0, 100% 8px, 100% 100%, 8px 100%, 0 calc(100% - 8px));
+    }
+
+    /* Glow Effects */
+    .glow-cyan {
+      box-shadow: 0 0 14px rgba(0, 229, 255, 0.45);
+    }
+    .glow-orange {
+      box-shadow: 0 0 20px rgba(254, 107, 0, 0.55), inset 0 0 12px rgba(254, 107, 0, 0.3);
+    }
+    .glow-emerald {
+      box-shadow: 0 0 12px rgba(34, 239, 126, 0.4);
+    }
+    
+    /* CRT Scanline Overlay */
+    .crt-grid {
+      background: linear-gradient(rgba(12, 19, 32, 0) 50%, rgba(0, 0, 0, 0.25) 50%), linear-gradient(90deg, rgba(0, 229, 255, 0.03), rgba(0, 0, 0, 0.01) 100%);
+      background-size: 100% 4px, 6px 100%;
+    }
+
+    /* Hide scrollbars for slick carousel */
+    .no-scrollbar::-webkit-scrollbar {
+      display: none;
+    }
+    .no-scrollbar {
+      -ms-overflow-style: none;
+      scrollbar-width: none;
+    }
+  </style>
+</head>
+<body class="bg-surface-container-lowest text-on-surface antialiased font-body-md select-none overflow-x-hidden min-h-screen flex justify-center items-center">
+<!-- Mobile Viewport Wrapper (390 x 844 aspect ratio container) -->
+<div class="relative w-full max-w-[412px] h-[100dvh] max-h-[915px] bg-surface flex flex-col justify-between overflow-hidden shadow-2xl border border-outline-variant/30">
+<!-- Ambient CRT Grid Overlay -->
+<div class="absolute inset-0 pointer-events-none z-30 crt-grid opacity-75"></div>
+<!-- SHARED COMPONENT: TopAppBar (Docked Top-0 Full Width) -->
+<header class="absolute top-0 left-0 w-full z-50 flex justify-between items-center px-margin-mobile py-space-sm bg-surface-container-low/80 backdrop-blur-md border-b border-outline-variant/40">
+<div class="flex items-center space-x-space-xs">
+<span class="material-symbols-outlined text-primary-container text-[20px]" data-icon="shield">shield</span>
+<span class="font-headline-md text-headline-md tracking-widest text-primary-container uppercase">AVIONICS // TAC-01</span>
+</div>
+<div class="flex items-center space-x-space-sm">
+<div class="flex items-center space-x-1 bg-surface-container px-2 py-0.5 rounded border border-outline-variant/60">
+<span class="w-1.5 h-1.5 rounded-full bg-tertiary-container animate-pulse"></span>
+<span class="font-label-sm text-label-sm text-tertiary-container">LIVE</span>
+</div>
+<button class="text-primary-container hover:text-primary active:opacity-80 transition-opacity">
+<span class="material-symbols-outlined text-[20px]" data-icon="toll">toll</span>
+</button>
+</div>
+</header>
+<!-- TOP TELEMETRY STATUS BAR (Cockpit Info Pods below TopAppBar) -->
+<section class="relative z-20 pt-[52px] px-margin-mobile pb-space-xs flex items-center justify-between gap-1.5 bg-gradient-to-b from-surface-container-lowest/90 via-surface-container-lowest/60 to-transparent">
+<!-- Player Rank Pod -->
+<div class="flex items-center space-x-1.5 bg-surface-container-low/90 border border-outline-variant/40 px-2 py-1 rounded-sm hud-bracket">
+<div class="flex items-center justify-center w-5 h-5 bg-secondary-container/20 border border-secondary-container text-secondary">
+<span class="material-symbols-outlined text-[14px]" style="font-variation-settings: 'FILL' 1;">military_tech</span>
+</div>
+<div>
+<div class="flex items-baseline space-x-1">
+<span class="font-headline-md text-[11px] leading-none text-secondary">LVL 24</span>
+</div>
+<span class="font-label-sm text-[8px] leading-tight text-outline block tracking-tighter">ACE CMDR</span>
+</div>
+</div>
+<!-- Fuel / Energy Pod -->
+<div class="flex items-center space-x-1.5 bg-surface-container-low/90 border border-outline-variant/40 px-2 py-1 rounded-sm">
+<span class="material-symbols-outlined text-primary-container text-[14px] animate-pulse" style="font-variation-settings: 'FILL' 1;">bolt</span>
+<div class="flex flex-col">
+<span class="font-label-md text-[9px] text-primary-container leading-none">85/100</span>
+<div class="w-10 h-1 bg-surface-bright rounded-full mt-0.5 overflow-hidden">
+<div class="h-full bg-primary-container w-[85%]"></div>
+</div>
+</div>
+</div>
+<!-- Currencies & Config -->
+<div class="flex items-center space-x-1.5">
+<!-- Gold Credits -->
+<div class="flex items-center bg-surface-container-low/90 border border-outline-variant/40 pl-1.5 pr-0.5 py-0.5 rounded-sm">
+<span class="material-symbols-outlined text-secondary text-[12px]" style="font-variation-settings: 'FILL' 1;">monetization_on</span>
+<span class="font-label-md text-[9px] text-on-surface mx-1">14,850</span>
+<button class="w-3.5 h-3.5 flex items-center justify-center bg-secondary/20 text-secondary hover:bg-secondary hover:text-on-secondary rounded-xs text-[10px] leading-none font-bold">+</button>
+</div>
+<!-- Cyan Gems -->
+<div class="flex items-center bg-surface-container-low/90 border border-outline-variant/40 pl-1.5 pr-0.5 py-0.5 rounded-sm">
+<span class="material-symbols-outlined text-primary-container text-[12px]" style="font-variation-settings: 'FILL' 1;">diamond</span>
+<span class="font-label-md text-[9px] text-primary-container mx-1">420</span>
+<button class="w-3.5 h-3.5 flex items-center justify-center bg-primary-container/20 text-primary-container hover:bg-primary-container hover:text-on-primary-container rounded-xs text-[10px] leading-none font-bold">+</button>
+</div>
+<!-- Quick Settings -->
+<button class="p-1 bg-surface-container-low/90 border border-outline-variant/40 text-on-surface-variant hover:text-primary-container active:scale-95 transition-transform rounded-sm">
+<span class="material-symbols-outlined text-[14px]">tune</span>
+</button>
+</div>
+</section>
+<!-- MAIN SCROLLABLE CONTENT CANVAS -->
+<main class="relative z-10 flex-1 overflow-y-auto no-scrollbar pb-16 flex flex-col justify-between">
+<!-- HERO HANGAR AIRCRAFT STAGE -->
+<section class="relative w-full h-[270px] flex items-center justify-center px-margin-mobile overflow-hidden mt-0">
+<!-- Tactical Vector Canopy Graphic Overlay -->
+<div class="absolute inset-0 pointer-events-none z-10">
+<!-- Horizon & HUD Crosshairs -->
+<div class="absolute top-1/2 left-4 w-6 h-[1px] bg-primary-container/40"></div>
+<div class="absolute top-1/2 left-8 w-[1px] h-3 -translate-y-1.5 bg-primary-container/40"></div>
+<div class="absolute top-1/2 right-4 w-6 h-[1px] bg-primary-container/40"></div>
+<div class="absolute top-1/2 right-8 w-[1px] h-3 -translate-y-1.5 bg-primary-container/40"></div>
+<!-- Top-Left Location Marker -->
+<div class="absolute top-2 left-4 flex flex-col space-y-0.5">
+<span class="font-label-sm text-[8px] text-outline tracking-widest uppercase">LOC: SEC-04 // DECK-HEX</span>
+<span class="font-label-sm text-[7px] text-primary-container/80 tracking-tight">LAT: 34.02° N // LONG: 118.28° W</span>
+</div>
+<!-- Top-Right Tactical Bracket -->
+<div class="absolute top-2 right-4 text-right">
+<span class="inline-block px-1.5 py-0.5 font-label-sm text-[8px] bg-primary-container/10 border border-primary-container/40 text-primary-container tracking-wider">RADAR: ACTIVE</span>
+</div>
+<!-- Hexagonal Launch Deck Graphic Lines -->
+<div class="absolute bottom-4 left-1/2 -translate-x-1/2 w-48 h-10 border-b-2 border-primary-container/80 glow-cyan rounded-[50%] opacity-40"></div>
+</div>
+<!-- Jet Imagery Showcase (User Input Asset) -->
+<div class="relative w-full h-full rounded-lg overflow-hidden border border-outline-variant/50 shadow-inner bg-surface-container-lowest">
+<img alt="F-22 Apex Raptor in Hangar" class="w-full h-full object-cover object-center filter contrast-110 brightness-95" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDmRz2m-aKMO3cqMqE9U64A1TX0neN9sGIbfcezevVuwtgBIQxnAQSUgC8z6vhMVJadipgR-9MnbwADozE2pYbocAZmhKR78Q_2RDpnGpbSZraWh-J-kFLS8z5ut_0pyYW-xHAF3rdoCC5vkYOQ67YdLXLky4kbdpQFjeaqWc02syAjW6FWaUQd1NzAglEpYoJDw0SV8xJgJJ2sHTuhkXCp_qdF4Udm8pKxVs3kgQ9JEL1DJZSQQQNp6C1lugyu-rfOPhBcunChQNg"/>
+<div class="absolute inset-0 bg-gradient-to-t from-surface via-transparent to-surface-container-lowest/50 pointer-events-none"></div>
+<!-- In-Stage Reticle Markers -->
+<div class="absolute top-1/3 left-1/4 w-8 h-8 border border-primary-container/60 rounded-full flex items-center justify-center pointer-events-none animate-pulse">
+<div class="w-1.5 h-1.5 bg-primary-container rounded-full"></div>
+<span class="absolute -top-3 left-4 font-label-sm text-[7px] text-primary-container tracking-widest whitespace-nowrap">LOCK // F-22</span>
+</div>
+<!-- Quick Stage Actuator Controls -->
+<div class="absolute bottom-2 left-3 right-3 flex justify-between items-end z-20">
+<button class="flex items-center space-x-1 px-2.5 py-1 bg-surface-container-low/85 backdrop-blur-md border border-outline-variant/60 rounded text-on-surface hover:text-primary-container active:scale-95 transition-all">
+<span class="material-symbols-outlined text-[13px] text-primary-container">360</span>
+<span class="font-label-sm text-[8px] tracking-wider uppercase">Inspect 360°</span>
+</button>
+<!-- Camo Customization -->
+<button class="flex items-center space-x-1 px-2.5 py-1 bg-surface-container-low/85 backdrop-blur-md border border-outline-variant/60 rounded text-on-surface hover:text-primary-container active:scale-95 transition-all">
+<span class="material-symbols-outlined text-[13px] text-secondary">palette</span>
+<span class="font-label-sm text-[8px] tracking-wider uppercase">Camo Fleet</span>
+</button>
+</div>
+</div>
+</section>
+<!-- AIRCRAFT DESIGNATION & STATS TELEMETRY POD -->
+<section class="px-margin-mobile mt-2">
+<div class="relative bg-surface-container-low/90 backdrop-blur-lg border border-outline-variant/50 p-space-sm rounded-sm hud-bracket">
+<!-- Header Banner -->
+<div class="flex justify-between items-start mb-2">
+<div>
+<div class="flex items-center space-x-2">
+<h2 class="font-headline-md text-headline-md tracking-wide text-on-surface font-extrabold uppercase">F-22 APEX RAPTOR</h2>
+</div>
+<p class="font-label-sm text-outline text-[8px] tracking-widest mt-0.5">TACTICAL AIR DOMINANCE // 5TH GEN STEALTH</p>
+</div>
+<span class="px-2 py-0.5 bg-primary-container/15 border border-primary-container font-label-sm text-[8px] text-primary-container uppercase tracking-wider glow-cyan font-bold">
+              TIER IV AIR SUP
+            </span>
+</div>
+<!-- Flight Telemetry Bars -->
+<div class="space-y-1.5 pt-1 border-t border-outline-variant/30">
+<!-- Speed Metric -->
+<div class="flex flex-col">
+<div class="flex justify-between items-baseline mb-0.5">
+<span class="font-label-sm text-[9px] text-on-surface-variant flex items-center">
+<span class="w-1.5 h-1.5 bg-primary-container inline-block mr-1"></span> SPEED // MACH 2.25
+                </span>
+<div class="flex items-baseline space-x-1">
+<span class="font-label-sm text-[8px] text-tertiary-container">+4 BOOST</span>
+<span class="font-label-md text-label-md text-primary-container">92<span class="text-outline text-[9px]">/100</span></span>
+</div>
+</div>
+<!-- Segmented Cyan Bar -->
+<div class="grid grid-cols-10 gap-1 h-1.5 bg-surface-dim p-0.5 rounded-xs">
+<div class="bg-primary-container"></div>
+<div class="bg-primary-container"></div>
+<div class="bg-primary-container"></div>
+<div class="bg-primary-container"></div>
+<div class="bg-primary-container"></div>
+<div class="bg-primary-container"></div>
+<div class="bg-primary-container"></div>
+<div class="bg-primary-container"></div>
+<div class="bg-primary-container"></div>
+<div class="bg-surface-bright"></div>
+</div>
+</div>
+<!-- Armor Metric -->
+<div class="flex flex-col">
+<div class="flex justify-between items-baseline mb-0.5">
+<span class="font-label-sm text-[9px] text-on-surface-variant flex items-center">
+<span class="w-1.5 h-1.5 bg-tertiary-container inline-block mr-1"></span> ARMOR // NANO-TITANIUM
+                </span>
+<span class="font-label-md text-label-md text-tertiary-container">78<span class="text-outline text-[9px]">/100</span></span>
+</div>
+<!-- Segmented Emerald Bar -->
+<div class="grid grid-cols-10 gap-1 h-1.5 bg-surface-dim p-0.5 rounded-xs">
+<div class="bg-tertiary-container"></div>
+<div class="bg-tertiary-container"></div>
+<div class="bg-tertiary-container"></div>
+<div class="bg-tertiary-container"></div>
+<div class="bg-tertiary-container"></div>
+<div class="bg-tertiary-container"></div>
+<div class="bg-tertiary-container"></div>
+<div class="bg-tertiary-container/40"></div>
+<div class="bg-surface-bright"></div>
+<div class="bg-surface-bright"></div>
+</div>
+</div>
+<!-- Firepower Metric -->
+<div class="flex flex-col">
+<div class="flex justify-between items-baseline mb-0.5">
+<span class="font-label-sm text-[9px] text-on-surface-variant flex items-center">
+<span class="w-1.5 h-1.5 bg-secondary-container inline-block mr-1"></span> FIREPOWER // AMRAAM x6
+                </span>
+<span class="font-label-md text-label-md text-secondary-container">88<span class="text-outline text-[9px]">/100</span></span>
+</div>
+<!-- Segmented Orange Bar -->
+<div class="grid grid-cols-10 gap-1 h-1.5 bg-surface-dim p-0.5 rounded-xs">
+<div class="bg-secondary-container"></div>
+<div class="bg-secondary-container"></div>
+<div class="bg-secondary-container"></div>
+<div class="bg-secondary-container"></div>
+<div class="bg-secondary-container"></div>
+<div class="bg-secondary-container"></div>
+<div class="bg-secondary-container"></div>
+<div class="bg-secondary-container"></div>
+<div class="bg-surface-bright"></div>
+<div class="bg-surface-bright"></div>
+</div>
+</div>
+</div>
+<!-- Sub-Pod Quick Upgrades Launcher -->
+<div class="mt-2.5 pt-2 flex items-center justify-between border-t border-outline-variant/30">
+<div class="flex items-center space-x-2">
+<span class="material-symbols-outlined text-outline text-[16px]">memory</span>
+<span class="font-label-sm text-[8px] text-outline">AVIONICS FIRMWARE 4.2: SYNCED</span>
+</div>
+<a href="hangar-upgrade.html" class="flex items-center space-x-1 px-3 py-1 bg-tertiary-container/15 hover:bg-tertiary-container/25 text-tertiary-container border border-tertiary-container rounded-xs glow-emerald active:scale-95 transition-all">
+<span class="material-symbols-outlined text-[12px]" style="font-variation-settings: 'FILL' 1;">upgrade</span>
+<span class="font-label-sm text-[9px] uppercase tracking-wider font-bold">UPGRADE STATS</span>
+</a>
+</div>
+</div>
+</section>
+<!-- FLEET CAROUSEL (Horizontal Scrollable Selection) -->
+<section class="mt-2.5 pl-margin-mobile">
+<div class="flex justify-between items-center pr-margin-mobile mb-1">
+<span class="font-label-sm text-[9px] text-outline tracking-widest uppercase">// SQUADRON JET FLEET</span>
+<span class="font-label-sm text-[8px] text-primary-container tracking-wider">4 ACTIVE HANGARS</span>
+</div>
+<div class="flex space-x-2 overflow-x-auto no-scrollbar pr-margin-mobile py-1">
+<!-- Card 1: F-22 Raptor (Active Selected) -->
+<div class="flex-shrink-0 w-28 p-2 bg-surface-container-low border-2 border-primary-container glow-cyan rounded-sm flex flex-col justify-between relative cursor-pointer">
+<div class="absolute top-1 right-1 w-1.5 h-1.5 bg-primary-container rounded-full animate-ping"></div>
+<div>
+<span class="font-label-sm text-[7px] text-primary-container uppercase font-bold tracking-tighter">SELECTED</span>
+<h3 class="font-headline-md text-[11px] leading-tight text-on-surface font-bold">F-22 RAPTOR</h3>
+<p class="font-label-sm text-[8px] text-outline">TIER IV</p>
+</div>
+<div class="mt-2 pt-1 border-t border-outline-variant/40 flex justify-between items-center">
+<span class="font-label-sm text-[7px] text-on-surface-variant">PWR</span>
+<span class="font-label-sm text-[8px] text-primary-container font-bold">92.0</span>
+</div>
+</div>
+<!-- Card 2: F-35 Valkyrie -->
+<div class="flex-shrink-0 w-28 p-2 bg-surface-container-low/80 border border-outline-variant/60 hover:border-outline-variant rounded-sm flex flex-col justify-between cursor-pointer active:scale-95 transition-all">
+<div>
+<span class="font-label-sm text-[7px] text-tertiary-container uppercase tracking-tighter">VTOL READY</span>
+<h3 class="font-headline-md text-[11px] leading-tight text-on-surface">F-35 VALKYRIE</h3>
+<p class="font-label-sm text-[8px] text-outline">TIER III</p>
+</div>
+<div class="mt-2 pt-1 border-t border-outline-variant/40 flex justify-between items-center">
+<span class="font-label-sm text-[7px] text-on-surface-variant">PWR</span>
+<span class="font-label-sm text-[8px] text-outline">84.5</span>
+</div>
+</div>
+<!-- Card 3: Su-57 Phantom -->
+<div class="flex-shrink-0 w-28 p-2 bg-surface-container-low/80 border border-outline-variant/60 hover:border-outline-variant rounded-sm flex flex-col justify-between cursor-pointer active:scale-95 transition-all">
+<div>
+<span class="font-label-sm text-[7px] text-secondary uppercase tracking-tighter">SUPER-MANEUVER</span>
+<h3 class="font-headline-md text-[11px] leading-tight text-on-surface">SU-57 PHANTOM</h3>
+<p class="font-label-sm text-[8px] text-outline">TIER IV</p>
+</div>
+<div class="mt-2 pt-1 border-t border-outline-variant/40 flex justify-between items-center">
+<span class="font-label-sm text-[7px] text-on-surface-variant">PWR</span>
+<span class="font-label-sm text-[8px] text-outline">89.8</span>
+</div>
+</div>
+<!-- Card 4: X-02 Wyvern (Locked) -->
+<div class="flex-shrink-0 w-28 p-2 bg-surface-container-lowest/80 border border-outline-variant/30 rounded-sm flex flex-col justify-between opacity-60 relative cursor-not-allowed">
+<div class="absolute inset-0 bg-surface-dim/80 backdrop-blur-[1px] flex flex-col items-center justify-center p-1 text-center rounded-sm">
+<span class="material-symbols-outlined text-outline text-[18px]">lock</span>
+<span class="font-label-sm text-[7px] text-outline font-bold mt-1 tracking-wider uppercase">UNLOCK AT LVL 28</span>
+</div>
+<div>
+<h3 class="font-headline-md text-[11px] leading-tight text-outline">X-02 WYVERN</h3>
+<p class="font-label-sm text-[8px] text-outline">TIER V PROTO</p>
+</div>
+<div class="mt-2 pt-1 border-t border-outline-variant/20 flex justify-between items-center">
+<span class="font-label-sm text-[7px] text-outline">PWR</span>
+<span class="font-label-sm text-[8px] text-outline">98.0</span>
+</div>
+</div>
+</div>
+</section>
+<!-- BATTLE ACTION TRIGGER (Warning Orange Chamfered Button) -->
+<section class="px-margin-mobile mt-3 mb-2">
+<a href="gameplay-hud.html" class="w-full relative group rounded-full bg-gradient-to-r from-[#ff5e00] via-[#ff7b00] to-[#ff5e00] border border-[#ffb693]/50 text-white font-headline-lg text-[16px] py-3.5 px-6 font-extrabold uppercase tracking-widest flex items-center justify-center space-x-2 glow-orange active:scale-[0.98] transition-all shadow-[0_6px_24px_rgba(254,107,0,0.55)]">
+<span class="material-symbols-outlined text-[20px] transition-transform group-hover:translate-x-1" style="font-variation-settings: 'FILL' 1;">double_arrow</span>
+<span>TO BATTLE!</span>
+<span class="material-symbols-outlined text-[20px] transition-transform group-hover:-translate-x-1" style="font-variation-settings: 'FILL' 1;">double_arrow</span>
+<div class="absolute -bottom-1 left-10 right-10 h-1 bg-secondary-fixed blur-xs opacity-75 rounded-full"></div>
+</a>
+</section>
+</main>
+<!-- SHARED COMPONENT: BottomNavBar (Docked Bottom-0 Full Width) -->
+<!-- Content logic: Page is 'Hangar' -> Tab 1 is ACTIVE -->
+<nav class="absolute bottom-0 left-0 w-full z-50 flex justify-around items-center px-gutter-mobile py-space-xs bg-surface-container-low/90 backdrop-blur-lg border-t border-outline-variant/40">
+<!-- HANGAR (Active Tab) -->
+<a class="flex flex-col items-center justify-center bg-primary-container/15 text-primary-container border-t-2 border-primary-container py-space-xs px-space-sm active:scale-95 transition-transform duration-100" href="index.html">
+<span class="material-symbols-outlined text-[20px]" data-icon="home" style="font-variation-settings: 'FILL' 1;">home</span>
+<span class="font-label-sm text-label-sm uppercase tracking-wider mt-0.5">HOME</span>
+</a>
+<!-- UPGRADES (Inactive Tab) -->
+<a class="flex flex-col items-center justify-center text-outline py-space-xs px-space-sm hover:text-primary-fixed-dim active:scale-95 transition-transform duration-100 relative" href="hangar-upgrade.html">
+<span class="material-symbols-outlined text-[20px]" data-icon="build">build</span>
+<span class="font-label-sm text-label-sm uppercase tracking-wider mt-0.5">UPGRADES</span>
+<span class="absolute top-1 right-2 w-1.5 h-1.5 bg-tertiary-container rounded-full"></span>
+</a>
+<!-- ALLIANCE (Inactive Tab) -->
+<a class="flex flex-col items-center justify-center text-outline py-space-xs px-space-sm hover:text-primary-fixed-dim active:scale-95 transition-transform duration-100" href="#alliance">
+<span class="material-symbols-outlined text-[20px]" data-icon="groups">groups</span>
+<span class="font-label-sm text-label-sm uppercase tracking-wider mt-0.5">ALLIANCE</span>
+</a>
+<!-- ARMORY (Inactive Tab) -->
+<a class="flex flex-col items-center justify-center text-outline py-space-xs px-space-sm hover:text-primary-fixed-dim active:scale-95 transition-transform duration-100" href="#shop">
+<span class="material-symbols-outlined text-[20px]" data-icon="shopping_cart">shopping_cart</span>
+<span class="font-label-sm text-label-sm uppercase tracking-wider mt-0.5">SHOP</span>
+</a>
+</nav>
+</div>
+<!-- Inline Micro-Interactions Script -->
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+      // Audio or tactical feedback simulator on click
+      const interactiveBtns = document.querySelectorAll('button, a');
+      interactiveBtns.forEach(el => {
+        el.addEventListener('click', (e) => {
+          // Micro scale-down visual pulse on HUD elements
+          el.style.transform = 'scale(0.96)';
+          setTimeout(() => {
+            el.style.transform = '';
+          }, 80);
+        });
+      });
+    });
+  </script>
+</body></html>
