@@ -151,8 +151,10 @@ class _SkyStrikeAppState extends State<SkyStrikeApp> {
 
   @override
   Widget build(BuildContext context) {
-    final startRoute =
-        widget.skipLoading ? AppRoutes.hangar : AppRoutes.loading;
+    const envStart = String.fromEnvironment('START_ROUTE');
+    final startRoute = envStart.isNotEmpty
+        ? envStart
+        : (widget.skipLoading ? AppRoutes.hangar : AppRoutes.loading);
     return MaterialApp(
       title: 'Sky Strike // Avionics HUD',
       debugShowCheckedModeBanner: false,

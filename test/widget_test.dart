@@ -6,6 +6,7 @@ import 'package:fighting_jet/game/dogfight_engine.dart';
 import 'package:fighting_jet/game/dogfight_sprites.dart';
 import 'package:fighting_jet/main.dart';
 import 'package:fighting_jet/models/game_models.dart';
+import 'package:fighting_jet/screens/gameplay_hud_screen.dart';
 import 'package:fighting_jet/state/game_controller.dart';
 import 'package:fighting_jet/theme/avionics_theme.dart';
 import 'package:fighting_jet/widgets/jet_360_viewer.dart';
@@ -792,5 +793,179 @@ void main() {
         expect(find.text('TO BATTLE!'), findsOneWidget);
       },
     );
+  });
+
+  group('Combat In-Battle Healing & Multi-Bullet Weapon Upgrades', () {
+    test('in-battle healing repairs hull, updates pulse aura, and triggers emergency repair kits', () {
+      final engine = DogfightEngine(
+        jet: GameSeedData.initialJets.first,
+        upgrades: const {},
+        stageNumber: 1,
+      );
+
+      expect(engine.emergencyRepairKits, 2);
+      expect(engine.hullPercent, 100);
+
+      // Simulate combat damage to hull
+      engine.player.hull = 30.0;
+      expect(engine.hullPercent, lessThan(40));
+
+      // Apply tactical repair canister (+35)
+      engine.applyRepair(35.0);
+      expect(engine.player.hull, 65.0);
+      expect(engine.repairPulseTimer, greaterThan(0));
+      expect(engine.callouts.any((c) => c.text == '+35 HULL REPAIRED'), isTrue);
+
+      // Trigger Emergency Nanite Repair kit
+      final usedKit = engine.triggerEmergencyRepair();
+      expect(usedKit, isTrue);
+      expect(engine.emergencyRepairKits, 1);
+      expect(engine.player.hull, 100.0); // 65 + 35 = 100.0 (clamped to maxHull)
+      expect(engine.repairPulseTimer, greaterThan(0));
+
+      // Steer jet to fly over a Nanite Repair pickup in the arena
+      engine.pickups.add(
+        CombatPickup(
+          id: 999,
+          type: CombatPickupType.repair,
+          x: engine.player.x,
+          y: engine.player.y + 0.01,
+          speedY: 0.05,
+        ),
+      );
+      engine.update(0.03);
+      expect(engine.pickups.where((p) => p.id == 999), isEmpty);
+      expect(engine.repairPulseTimer, greaterThan(0));
+
+      engine.dispose();
+    });
+
+    test('tactical bullet types switch weapon systems, spawn distinct projectile salvos, and piercing laser pierces targets', () {
+      final engine = DogfightEngine(
+        jet: GameSeedData.initialJets.first,
+        upgrades: const {},
+        stageNumber: 2,
+        autoFire: false,
+      );
+
+      expect(engine.activeWeapon, PlayerWeaponType.vulcan);
+
+      // Standard Vulcan burst
+      engine.triggerCannonBurst();
+      final vulcanProjectiles = engine.projectiles.where((p) => p.weaponType == PlayerWeaponType.vulcan).toList();
+      expect(vulcanProjectiles.length, 2); // Twin tracers
+      expect(vulcanProjectiles.first.pierces, isFalse);
+
+      // Equip Plasma Spread
+      engine.setWeapon(PlayerWeaponType.plasmaSpread, ammo: 120);
+      expect(engine.activeWeapon, PlayerWeaponType.plasmaSpread);
+      expect(engine.specialWeaponAmmo, 120);
+
+      // Fire Plasma burst -> 5-way ionization fan (consumes 5 ammo)
+      engine.triggerCannonBurst();
+      final plasmaProjectiles = engine.projectiles.where((p) => p.weaponType == PlayerWeaponType.plasmaSpread).toList();
+      expect(plasmaProjectiles.length, 5);
+      expect(engine.specialWeaponAmmo, 115);
+
+      // Equip Twin Laser Beam -> hyper-velocity piercing tachyon beams
+      engine.setWeapon(PlayerWeaponType.laserBeam, ammo: 90);
+      expect(engine.activeWeapon, PlayerWeaponType.laserBeam);
+      engine.triggerCannonBurst();
+      final laserProjectiles = engine.projectiles.where((p) => p.weaponType == PlayerWeaponType.laserBeam).toList();
+      expect(laserProjectiles.length, 2);
+      expect(laserProjectiles.first.pierces, isTrue);
+
+      // Verify laser projectile pierces multiple enemy bogeys without disappearing
+      final laser = laserProjectiles.first;
+      final enemy1 = engine.enemies[0];
+      laser.x = enemy1.x;
+      laser.y = enemy1.y + 0.02;
+      laser.vx = 0;
+      laser.vy = -0.5;
+      engine.update(0.03);
+      expect(laser.hitEntityIds.contains(enemy1.id), isTrue);
+      expect(engine.projectiles.contains(laser), isTrue); // Pierced through, still active
+
+      // Equip Swarm Micro-Rockets
+      engine.setWeapon(PlayerWeaponType.scatterMissile, ammo: 60);
+      expect(engine.activeWeapon, PlayerWeaponType.scatterMissile);
+      engine.triggerCannonBurst();
+      final swarmProjectiles = engine.projectiles.where((p) => p.weaponType == PlayerWeaponType.scatterMissile).toList();
+      expect(swarmProjectiles.length, 4);
+
+      // Collecting a weapon pickup pod equips the new weapon system
+      engine.pickups.add(
+        CombatPickup(
+          id: 888,
+          type: CombatPickupType.plasmaSpread,
+          x: engine.player.x,
+          y: engine.player.y + 0.01,
+          speedY: 0.05,
+        ),
+      );
+      engine.update(0.03);
+      expect(engine.activeWeapon, PlayerWeaponType.plasmaSpread);
+      expect(engine.specialWeaponAmmo, 120);
+
+      engine.dispose();
+    });
+
+    testWidgets('BottomWeaponsControlDeck displays active weapon, ammo, and emergency repair button', (tester) async {
+      tester.view.physicalSize = const Size(412, 892);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+
+      var repairTriggered = false;
+      var cannonTapped = false;
+      var cannonHeld = false;
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: BottomWeaponsControlDeck(
+              autoFire: true,
+              cannonAmmo: 250,
+              activeWeapon: PlayerWeaponType.plasmaSpread,
+              specialWeaponAmmo: 85,
+              emergencyRepairKits: 2,
+              missileSalvo: 4,
+              overdriveCharge: 100,
+              overdriveActive: false,
+              shieldActive: false,
+              yokeOffset: Offset.zero,
+              onToggleAutoFire: () {},
+              onYokeChanged: (_) {},
+              onOverdrive: () {},
+              onEmergencyRepair: () => repairTriggered = true,
+              onCannonTap: () => cannonTapped = true,
+              onCannonHoldChanged: (h) => cannonHeld = h,
+              onToggleShield: () {},
+              onFireMissile: () {},
+            ),
+          ),
+        ),
+      );
+      await tester.pump();
+
+      // Verify weapon deck displays Plasma Spread weapon, 85 ammo, and Emergency Repair button
+      expect(find.byKey(const Key('fire_cannon_button')), findsOneWidget);
+      expect(find.byKey(const Key('emergency_repair_button')), findsOneWidget);
+      expect(find.text('PLASMA'), findsOneWidget);
+      expect(find.text('85'), findsOneWidget);
+      expect(find.text('REPAIR x2'), findsOneWidget);
+      expect(find.text('PLASMA: 85 // FOX-2: 4 // REP: x2'), findsOneWidget);
+
+      // Tap Emergency Repair button -> triggers callback
+      await tester.tap(find.byKey(const Key('emergency_repair_button')));
+      await tester.pump();
+      expect(repairTriggered, isTrue);
+
+      // Tap Cannon button -> triggers callback
+      await tester.tap(find.byKey(const Key('fire_cannon_button')));
+      await tester.pump();
+      expect(cannonTapped, isTrue);
+      expect(cannonHeld, isFalse);
+    });
   });
 }

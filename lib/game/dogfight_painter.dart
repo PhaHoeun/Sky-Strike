@@ -40,6 +40,7 @@ class DogfightPainter extends CustomPainter {
     _drawCloudsAndStreaks(canvas, w, h);
     _drawSkyfortressBoss(canvas, w, h);
     _drawEnemyJets(canvas, w, h);
+    _drawCombatPickups(canvas, w, h);
     _drawProjectiles(canvas, w, h);
     _drawPlayerJet(canvas, w, h);
     _drawExplosionsAndCallouts(canvas, w, h);
@@ -564,6 +565,117 @@ class DogfightPainter extends CustomPainter {
     }
   }
 
+  void _drawCombatPickups(Canvas canvas, double w, double h) {
+    for (final p in engine.pickups) {
+      final cx = p.x * w;
+      final cy = p.y * h;
+      final bobY = math.sin(p.phase) * 3.5;
+      final pos = Offset(cx, cy + bobY);
+
+      final (Color themeColor, String label) = switch (p.type) {
+        CombatPickupType.repair => (
+          AvionicsColors.emeraldBright,
+          '+35 HULL',
+        ),
+        CombatPickupType.plasmaSpread => (
+          const Color(0xFF00E5FF),
+          'PLASMA',
+        ),
+        CombatPickupType.laserBeam => (
+          const Color(0xFFFF2A55),
+          'LASER',
+        ),
+        CombatPickupType.scatterMissile => (
+          const Color(0xFFFFB800),
+          'SWARM',
+        ),
+      };
+
+      final pulse = 0.5 + 0.5 * math.sin(engine.elapsedSeconds * 6 + p.id);
+
+      // Pulsing outer beacon radar halo
+      canvas.drawCircle(
+        pos,
+        18 + pulse * 4.0,
+        Paint()
+          ..color = themeColor.withValues(alpha: 0.22 + pulse * 0.15)
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = 1.4,
+      );
+
+      // Armored beveled hexagonal container pod
+      const podR = 12.0;
+      final hexPath = Path();
+      for (var k = 0; k < 6; k++) {
+        final a = k * (math.pi / 3) + (p.phase * 0.25);
+        final pt = Offset(pos.dx + math.cos(a) * podR, pos.dy + math.sin(a) * podR);
+        if (k == 0) {
+          hexPath.moveTo(pt.dx, pt.dy);
+        } else {
+          hexPath.lineTo(pt.dx, pt.dy);
+        }
+      }
+      hexPath.close();
+
+      canvas.drawPath(
+        hexPath,
+        Paint()..color = const Color(0xFF060D17).withValues(alpha: 0.90),
+      );
+      canvas.drawPath(
+        hexPath,
+        Paint()
+          ..color = themeColor
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = 1.8,
+      );
+
+      // Inner icon symbol
+      if (p.type == CombatPickupType.repair) {
+        // Crisp medical cross
+        final crossPaint = Paint()
+          ..color = Colors.white
+          ..strokeWidth = 2.4
+          ..strokeCap = StrokeCap.square;
+        canvas.drawLine(Offset(pos.dx - 4.5, pos.dy), Offset(pos.dx + 4.5, pos.dy), crossPaint);
+        canvas.drawLine(Offset(pos.dx, pos.dy - 4.5), Offset(pos.dx, pos.dy + 4.5), crossPaint);
+      } else {
+        // Glowing high-energy weapon core
+        canvas.drawCircle(
+          pos,
+          4.2,
+          Paint()..color = themeColor,
+        );
+        canvas.drawCircle(
+          pos,
+          2.0,
+          Paint()..color = Colors.white,
+        );
+      }
+
+      // Floating tactical HUD callout label above pickup pod
+      final tp = TextPainter(
+        text: TextSpan(
+          text: label,
+          style: TextStyle(
+            fontSize: 7.5,
+            fontWeight: FontWeight.w800,
+            color: themeColor,
+            letterSpacing: 0.8,
+            shadows: const [
+              Shadow(
+                color: Colors.black,
+                blurRadius: 3,
+                offset: Offset(0, 1),
+              ),
+            ],
+          ),
+        ),
+        textDirection: TextDirection.ltr,
+      )..layout();
+      tp.paint(canvas, Offset(pos.dx - tp.width / 2, pos.dy - podR - 11));
+    }
+  }
+
   void _drawPlayerJet(Canvas canvas, double w, double h) {
     final p = engine.player;
     final cx = p.x * w;
@@ -756,6 +868,28 @@ class DogfightPainter extends CustomPainter {
       );
     }
 
+    // Expanding nanite repair aura when healing during combat
+    if (engine.repairPulseTimer > 0) {
+      final pulseRadius = s * (1.15 + (1.0 - engine.repairPulseTimer / 0.85) * 0.45);
+      final alpha = (engine.repairPulseTimer / 0.85).clamp(0.0, 1.0);
+      canvas.drawCircle(
+        Offset.zero,
+        pulseRadius,
+        Paint()
+          ..color = AvionicsColors.emeraldBright.withValues(alpha: alpha * 0.45)
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = 3.2,
+      );
+      canvas.drawCircle(
+        Offset.zero,
+        pulseRadius * 0.86,
+        Paint()
+          ..color = AvionicsColors.emerald.withValues(alpha: alpha * 0.22)
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = 1.6,
+      );
+    }
+
     canvas.restore();
 
     // Compact tactical hull integrity bar right beneath player fighter
@@ -813,18 +947,96 @@ class DogfightPainter extends CustomPainter {
           Paint()..color = Colors.white,
         );
       } else if (proj.fromPlayer) {
-        // 20MM glowing supersonic vulcan tracer
-        final tracerColor = engine.overdriveActive
-            ? AvionicsColors.cyan
-            : AvionicsColors.goldLight;
-        canvas.drawLine(
-          Offset(px, py),
-          Offset(px - proj.vx * 18, py - proj.vy * 14),
-          Paint()
-            ..color = tracerColor
-            ..strokeWidth = 2.4
-            ..strokeCap = StrokeCap.round,
-        );
+        switch (proj.weaponType) {
+          case PlayerWeaponType.plasmaSpread:
+            // High-energy electric cyan & purple plasma bolt with ionization halo
+            canvas.drawCircle(
+              Offset(px, py),
+              8.5,
+              Paint()..color = const Color(0xFF00E5FF).withValues(alpha: 0.35),
+            );
+            canvas.drawCircle(
+              Offset(px, py),
+              5.0,
+              Paint()..color = const Color(0xFF00E5FF),
+            );
+            canvas.drawCircle(
+              Offset(px, py),
+              2.4,
+              Paint()..color = const Color(0xFFE8FFFF),
+            );
+          case PlayerWeaponType.laserBeam:
+            // Hyper-velocity piercing ruby/gold tachyon laser streak
+            final beamStart = Offset(px, py + 14);
+            final beamEnd = Offset(px, py - 38);
+            canvas.drawLine(
+              beamStart,
+              beamEnd,
+              Paint()
+                ..color = const Color(0xFFFF2A55).withValues(alpha: 0.38)
+                ..strokeWidth = 5.8
+                ..strokeCap = StrokeCap.round,
+            );
+            canvas.drawLine(
+              beamStart,
+              beamEnd,
+              Paint()
+                ..color = const Color(0xFFFF3366)
+                ..strokeWidth = 3.0
+                ..strokeCap = StrokeCap.round,
+            );
+            canvas.drawLine(
+              beamStart,
+              beamEnd,
+              Paint()
+                ..color = const Color(0xFFFFF9D2)
+                ..strokeWidth = 1.4
+                ..strokeCap = StrokeCap.round,
+            );
+          case PlayerWeaponType.scatterMissile:
+            // Micro-rocket with golden exhaust and miniature smoke plume
+            if (proj.smokeTrail.length > 1) {
+              final smoke = Path();
+              for (var k = 0; k < proj.smokeTrail.length; k++) {
+                final pt = proj.smokeTrail[k];
+                if (k == 0) {
+                  smoke.moveTo(pt.$1 * w, pt.$2 * h);
+                } else {
+                  smoke.lineTo(pt.$1 * w, pt.$2 * h);
+                }
+              }
+              canvas.drawPath(
+                smoke,
+                Paint()
+                  ..color = const Color(0xFFFFD166).withValues(alpha: 0.40)
+                  ..style = PaintingStyle.stroke
+                  ..strokeWidth = 1.6,
+              );
+            }
+            canvas.drawCircle(
+              Offset(px, py),
+              4.6,
+              Paint()..color = AvionicsColors.orange,
+            );
+            canvas.drawCircle(
+              Offset(px, py),
+              2.0,
+              Paint()..color = Colors.white,
+            );
+          case PlayerWeaponType.vulcan:
+            // 20MM glowing supersonic vulcan tracer
+            final tracerColor = engine.overdriveActive
+                ? AvionicsColors.cyan
+                : AvionicsColors.goldLight;
+            canvas.drawLine(
+              Offset(px, py),
+              Offset(px - proj.vx * 18, py - proj.vy * 14),
+              Paint()
+                ..color = tracerColor
+                ..strokeWidth = 2.4
+                ..strokeCap = StrokeCap.round,
+            );
+        }
       } else {
         // Enemy plasma orb with outer glow halo for tactical fan dodging
         canvas.drawCircle(

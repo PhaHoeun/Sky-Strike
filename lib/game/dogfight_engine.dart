@@ -88,7 +88,102 @@ class SkyfortressBoss {
   double get destroyedFraction => (1.0 - (hp / maxHp)).clamp(0.0, 1.0);
 }
 
-/// Active projectile fired by either the player (`20MM`, `FOX 2`) or enemies.
+/// Distinct tactical weapon systems player can equip during dogfight combat.
+enum PlayerWeaponType {
+  vulcan(
+    label: '20MM VULCAN',
+    shortCode: '20MM',
+    description: 'TWIN HIGH-VELOCITY BALLISTIC CANNON',
+  ),
+  plasmaSpread(
+    label: 'PLASMA SPREAD',
+    shortCode: 'PLASMA',
+    description: '5-WAY HIGH-ENERGY IONIZATION FAN',
+  ),
+  laserBeam(
+    label: 'TWIN HEAVY LASER',
+    shortCode: 'LASER',
+    description: 'PIERCING HYPER-VELOCITY TACHYON BEAMS',
+  ),
+  scatterMissile(
+    label: 'SWARM MICRO-ROCKETS',
+    shortCode: 'SWARM',
+    description: 'QUAD CLUSTER ROCKETS WITH EXPONENTIAL BURN',
+  );
+
+  const PlayerWeaponType({
+    required this.label,
+    required this.shortCode,
+    required this.description,
+  });
+
+  final String label;
+  final String shortCode;
+  final String description;
+}
+
+/// Tactical in-flight supply drops player can collect by steering over them.
+enum CombatPickupType {
+  repair(
+    label: 'NANITE REPAIR',
+    code: 'REP',
+    healAmount: 35.0,
+  ),
+  plasmaSpread(
+    label: 'PLASMA SPREAD',
+    code: 'PLS',
+    weaponType: PlayerWeaponType.plasmaSpread,
+    ammoCount: 120,
+  ),
+  laserBeam(
+    label: 'TWIN HEAVY LASER',
+    code: 'LSR',
+    weaponType: PlayerWeaponType.laserBeam,
+    ammoCount: 100,
+  ),
+  scatterMissile(
+    label: 'SWARM ROCKETS',
+    code: 'SWR',
+    weaponType: PlayerWeaponType.scatterMissile,
+    ammoCount: 80,
+  );
+
+  const CombatPickupType({
+    required this.label,
+    required this.code,
+    this.healAmount = 0.0,
+    this.weaponType,
+    this.ammoCount = 0,
+  });
+
+  final String label;
+  final String code;
+  final double healAmount;
+  final PlayerWeaponType? weaponType;
+  final int ammoCount;
+}
+
+/// Floating tactical supply canister drifting down the battlefield.
+class CombatPickup {
+  CombatPickup({
+    required this.id,
+    required this.type,
+    required this.x,
+    required this.y,
+    this.speedY = 0.095,
+  }) : anchorX = x;
+
+  final int id;
+  final CombatPickupType type;
+  double x;
+  double y;
+  final double anchorX;
+  final double speedY;
+  double phase = 0;
+  double life = 18.0;
+}
+
+/// Active projectile fired by either the player (`20MM`, `FOX 2`, `LASER`, `PLASMA`) or enemies.
 class CombatProjectile {
   CombatProjectile({
     required this.x,
@@ -100,6 +195,8 @@ class CombatProjectile {
     required this.isMissile,
     this.targetEnemyId,
     this.targetBoss = false,
+    this.weaponType = PlayerWeaponType.vulcan,
+    this.pierces = false,
   });
 
   double x;
@@ -111,6 +208,9 @@ class CombatProjectile {
   final bool isMissile;
   int? targetEnemyId;
   bool targetBoss;
+  final PlayerWeaponType weaponType;
+  final bool pierces;
+  final Set<int> hitEntityIds = {};
   double life = 4.0;
   final List<(double x, double y)> smokeTrail = [];
 }
@@ -248,6 +348,15 @@ class DogfightEngine extends ChangeNotifier {
   final List<CloudPuff> clouds = [];
   final List<SpeedStreak> streaks = [];
   final List<CombatCallout> callouts = [];
+
+  // Tactical weapons & pickups
+  final List<CombatPickup> pickups = [];
+  PlayerWeaponType activeWeapon = PlayerWeaponType.vulcan;
+  int specialWeaponAmmo = 0;
+  double repairPulseTimer = 0;
+  int emergencyRepairKits = 2;
+  double _airdropTimer = 11.0;
+  int _nextPickupId = 1;
 
   // Steering & controls (100% pilot controlled via Flight Yoke or touch drag)
   double inputX = 0;
@@ -442,6 +551,12 @@ class DogfightEngine extends ChangeNotifier {
     enemies.clear();
     projectiles.clear();
     callouts.clear();
+    pickups.clear();
+
+    activeWeapon = PlayerWeaponType.vulcan;
+    specialWeaponAmmo = 0;
+    repairPulseTimer = 0;
+    _airdropTimer = 11.0;
 
     missileSalvo = maxMissileSalvo;
     _missileRechargeTimer = 0;
@@ -463,6 +578,7 @@ class DogfightEngine extends ChangeNotifier {
     if (resetFullState) {
       _pendingStageClear = null;
       enemyHitsTaken = 0;
+      emergencyRepairKits = 2;
       player.hull = player.maxHull;
       player.shieldCharge = 100;
       overdriveCharge = 92;
@@ -539,6 +655,19 @@ class DogfightEngine extends ChangeNotifier {
   }
 
   void _fireCannonSalvo() {
+    switch (activeWeapon) {
+      case PlayerWeaponType.plasmaSpread:
+        _firePlasmaSpreadSalvo();
+      case PlayerWeaponType.laserBeam:
+        _fireLaserBeamSalvo();
+      case PlayerWeaponType.scatterMissile:
+        _fireScatterMissileSalvo();
+      case PlayerWeaponType.vulcan:
+        _fireStandardVulcanSalvo();
+    }
+  }
+
+  void _fireStandardVulcanSalvo() {
     final cannonLvl = upgrades[SubsystemId.cannon]?.level ?? 1;
     final hasSpread = cannonLvl >= 5 || overdriveActive;
     final shotCount = hasSpread ? 3 : 2;
@@ -560,6 +689,7 @@ class DogfightEngine extends ChangeNotifier {
           damage: _cannonDamage,
           fromPlayer: true,
           isMissile: false,
+          weaponType: PlayerWeaponType.vulcan,
         ),
       );
     }
@@ -573,10 +703,131 @@ class DogfightEngine extends ChangeNotifier {
           damage: _cannonDamage * 0.9,
           fromPlayer: true,
           isMissile: false,
+          weaponType: PlayerWeaponType.vulcan,
         ),
       );
     }
     _emitSound(BattleSfx.cannon);
+  }
+
+  void _firePlasmaSpreadSalvo() {
+    const shotCount = 5;
+    shotsFired += shotCount;
+    stageShotsFired += shotCount;
+    specialWeaponAmmo = math.max(0, specialWeaponAmmo - shotCount);
+
+    const spreads = [
+      (-0.28, -1.36),
+      (-0.14, -1.44),
+      (0.00, -1.50),
+      (0.14, -1.44),
+      (0.28, -1.36),
+    ];
+    for (final (vx, vy) in spreads) {
+      projectiles.add(
+        CombatProjectile(
+          x: player.x + vx * 0.06,
+          y: player.y - 0.042,
+          vx: vx,
+          vy: vy,
+          damage: _cannonDamage * 0.92,
+          fromPlayer: true,
+          isMissile: false,
+          weaponType: PlayerWeaponType.plasmaSpread,
+        ),
+      );
+    }
+    _emitSound(BattleSfx.cannon);
+
+    if (specialWeaponAmmo <= 0) {
+      activeWeapon = PlayerWeaponType.vulcan;
+      callouts.add(
+        CombatCallout(
+          x: player.x,
+          y: player.y - 0.05,
+          text: '20MM VULCAN READY',
+          isCritical: false,
+        ),
+      );
+    }
+  }
+
+  void _fireLaserBeamSalvo() {
+    const shotCount = 2;
+    shotsFired += shotCount;
+    stageShotsFired += shotCount;
+    specialWeaponAmmo = math.max(0, specialWeaponAmmo - shotCount);
+
+    const vy = -2.35;
+    for (final side in [-0.026, 0.026]) {
+      projectiles.add(
+        CombatProjectile(
+          x: player.x + side,
+          y: player.y - 0.05,
+          vx: 0,
+          vy: vy,
+          damage: _cannonDamage * 1.65,
+          fromPlayer: true,
+          isMissile: false,
+          weaponType: PlayerWeaponType.laserBeam,
+          pierces: true,
+        ),
+      );
+    }
+    _emitSound(BattleSfx.cannon);
+
+    if (specialWeaponAmmo <= 0) {
+      activeWeapon = PlayerWeaponType.vulcan;
+      callouts.add(
+        CombatCallout(
+          x: player.x,
+          y: player.y - 0.05,
+          text: '20MM VULCAN READY',
+          isCritical: false,
+        ),
+      );
+    }
+  }
+
+  void _fireScatterMissileSalvo() {
+    const shotCount = 4;
+    shotsFired += shotCount;
+    stageShotsFired += shotCount;
+    specialWeaponAmmo = math.max(0, specialWeaponAmmo - shotCount);
+
+    const offsets = [
+      (-0.040, -0.20, -1.16),
+      (-0.015, -0.06, -1.24),
+      (0.015, 0.06, -1.24),
+      (0.040, 0.20, -1.16),
+    ];
+    for (final (ox, vx, vy) in offsets) {
+      projectiles.add(
+        CombatProjectile(
+          x: player.x + ox,
+          y: player.y - 0.038,
+          vx: vx,
+          vy: vy,
+          damage: _cannonDamage * 1.35,
+          fromPlayer: true,
+          isMissile: true,
+          weaponType: PlayerWeaponType.scatterMissile,
+        ),
+      );
+    }
+    _emitSound(BattleSfx.missile);
+
+    if (specialWeaponAmmo <= 0) {
+      activeWeapon = PlayerWeaponType.vulcan;
+      callouts.add(
+        CombatCallout(
+          x: player.x,
+          y: player.y - 0.05,
+          text: '20MM VULCAN READY',
+          isCritical: false,
+        ),
+      );
+    }
   }
 
   /// Launches twin heat-seeking FOX-2 AMRAAM missiles locked onto active threats.
@@ -657,12 +908,14 @@ class DogfightEngine extends ChangeNotifier {
     }
 
     stageElapsedSeconds += dt;
+    repairPulseTimer = math.max(0, repairPulseTimer - dt);
 
     _updateTimers(dt);
     _updateEnvironment(dt);
     _updatePlayerFlight(dt);
     _updateBoss(dt);
     _updateEnemies(dt);
+    _updatePickups(dt);
     _updateProjectiles(dt);
     _updateParticlesAndCallouts(dt);
 
@@ -930,6 +1183,7 @@ class DogfightEngine extends ChangeNotifier {
         // Check enemy jet hits
         for (var j = enemies.length - 1; j >= 0; j--) {
           final e = enemies[j];
+          if (p.pierces && p.hitEntityIds.contains(e.id)) continue;
           final hitR = p.isMissile ? 0.068 : 0.048;
           if (_distSq(p.x, p.y, e.x, e.y) <= hitR * hitR) {
             shotsHit += 1;
@@ -937,12 +1191,19 @@ class DogfightEngine extends ChangeNotifier {
             e.hp -= p.damage;
             e.hitFlash = 0.14;
             _spawnExplosion(p.x, p.y, small: !p.isMissile);
+            if (p.pierces) {
+              p.hitEntityIds.add(e.id);
+              if (p.hitEntityIds.length >= 3) {
+                consumed = true;
+              }
+            } else {
+              consumed = true;
+            }
             if (e.hp <= 0) {
               _onEnemyDestroyed(e);
               enemies.removeAt(j);
             }
-            consumed = true;
-            break;
+            if (consumed) break;
           }
         }
 
@@ -955,7 +1216,9 @@ class DogfightEngine extends ChangeNotifier {
             shotsHit += 1;
             stageShotsHit += 1;
             _damageBoss(p.damage, p.x, p.y, critical: p.isMissile);
-            consumed = true;
+            if (!p.pierces) {
+              consumed = true;
+            }
           }
         }
 
@@ -1011,6 +1274,121 @@ class DogfightEngine extends ChangeNotifier {
     );
     // Escort kills weaken Skyfortress defense matrix
     _damageBoss(24.0, e.x, e.y, critical: false, silent: true);
+
+    // Dropped combat power-ups: Nanite repair healing or upgraded fighting bullets
+    final lowHull = (player.hull / player.maxHull) < 0.55;
+    final dropChance = lowHull ? 0.72 : 0.42;
+    if (_rng.nextDouble() < dropChance) {
+      _spawnPickupAt(e.x, e.y);
+    }
+  }
+
+  void _updatePickups(double dt) {
+    _airdropTimer -= dt;
+    if (_airdropTimer <= 0) {
+      _airdropTimer = 13.0 + _rng.nextDouble() * 5.0;
+      final type = _rng.nextBool()
+          ? CombatPickupType.repair
+          : [
+              CombatPickupType.plasmaSpread,
+              CombatPickupType.laserBeam,
+              CombatPickupType.scatterMissile,
+            ][_rng.nextInt(3)];
+      _spawnPickupAt(0.18 + _rng.nextDouble() * 0.64, -0.05, type: type);
+    }
+
+    for (var i = pickups.length - 1; i >= 0; i--) {
+      final p = pickups[i];
+      p.life -= dt;
+      p.phase += dt * 3.2;
+      p.y += p.speedY * dt;
+      p.x = (p.anchorX + math.sin(p.phase) * 0.035).clamp(0.12, 0.88);
+
+      if (p.life <= 0 || p.y > 1.08) {
+        pickups.removeAt(i);
+        continue;
+      }
+
+      // Pickup magnet collection when player fighter flies near canister
+      if (_distSq(player.x, player.y, p.x, p.y) <= 0.082 * 0.082) {
+        _collectPickup(p);
+        pickups.removeAt(i);
+      }
+    }
+  }
+
+  void _collectPickup(CombatPickup pickup) {
+    _spawnExplosion(pickup.x, pickup.y, small: true);
+    if (pickup.type == CombatPickupType.repair) {
+      applyRepair(pickup.type.healAmount);
+      emergencyRepairKits = math.min(4, emergencyRepairKits + 1);
+    } else {
+      setWeapon(pickup.type.weaponType!, ammo: pickup.type.ammoCount);
+    }
+  }
+
+  void _spawnPickupAt(double x, double y, {CombatPickupType? type}) {
+    final lowHull = (player.hull / player.maxHull) < 0.55;
+    final resolvedType = type ??
+        ((lowHull || _rng.nextDouble() < 0.40)
+            ? CombatPickupType.repair
+            : [
+                CombatPickupType.plasmaSpread,
+                CombatPickupType.laserBeam,
+                CombatPickupType.scatterMissile,
+              ][_rng.nextInt(3)]);
+
+    pickups.add(
+      CombatPickup(
+        id: _nextPickupId++,
+        type: resolvedType,
+        x: x.clamp(0.14, 0.86),
+        y: y,
+      ),
+    );
+  }
+
+  /// Restores [amount] hull health points to the player jet and triggers repair effects.
+  void applyRepair(double amount) {
+    final oldHull = player.hull;
+    player.hull = math.min(player.maxHull, player.hull + amount);
+    final healed = (player.hull - oldHull).round();
+    repairPulseTimer = 0.85;
+    _emitSound(BattleSfx.shield);
+    callouts.add(
+      CombatCallout(
+        x: player.x,
+        y: player.y - 0.05,
+        text: '+$healed HULL REPAIRED',
+        isCritical: true,
+      ),
+    );
+    notifyListeners();
+  }
+
+  /// Uses an emergency field nanite cell to immediately restore +35 Hull HP.
+  bool triggerEmergencyRepair() {
+    if (paused || victoryTriggered || defeatTriggered) return false;
+    if (emergencyRepairKits <= 0 || player.hull >= player.maxHull) return false;
+    emergencyRepairKits -= 1;
+    applyRepair(35.0);
+    return true;
+  }
+
+  /// Equips an upgraded combat bullet system with custom ballistic/energy trajectory.
+  void setWeapon(PlayerWeaponType type, {required int ammo}) {
+    activeWeapon = type;
+    specialWeaponAmmo = ammo;
+    _emitSound(BattleSfx.overdrive);
+    callouts.add(
+      CombatCallout(
+        x: player.x,
+        y: player.y - 0.05,
+        text: 'ARMED: ${type.label}',
+        isCritical: true,
+      ),
+    );
+    notifyListeners();
   }
 
   void _damageBoss(

@@ -27,12 +27,13 @@ class GameplayHudScreen extends StatefulWidget {
   final int stageNumber;
 
   @override
-  State<GameplayHudScreen> createState() => _GameplayHudScreenState();
+  State<GameplayHudScreen> createState() => GameplayHudScreenState();
 }
 
-class _GameplayHudScreenState extends State<GameplayHudScreen>
+class GameplayHudScreenState extends State<GameplayHudScreen>
     with SingleTickerProviderStateMixin {
   late DogfightEngine _engine;
+  DogfightEngine get engine => _engine;
   late final Ticker _ticker;
   Duration _lastElapsed = Duration.zero;
   Timer? _toastTimer;
@@ -621,9 +622,12 @@ class _GameplayHudScreenState extends State<GameplayHudScreen>
                           ),
                         ),
                       ),
-                      _BottomWeaponsControlDeck(
+                      BottomWeaponsControlDeck(
                         autoFire: _engine.autoFire,
                         cannonAmmo: _engine.cannonAmmo,
+                        activeWeapon: _engine.activeWeapon,
+                        specialWeaponAmmo: _engine.specialWeaponAmmo,
+                        emergencyRepairKits: _engine.emergencyRepairKits,
                         missileSalvo: _engine.missileSalvo,
                         overdriveCharge: _engine.overdriveCharge.round(),
                         overdriveActive: _engine.overdriveActive,
@@ -637,6 +641,7 @@ class _GameplayHudScreenState extends State<GameplayHudScreen>
                           _engine.setFlightInput(offset.dx, offset.dy);
                         },
                         onOverdrive: _engine.activateOverdrive,
+                        onEmergencyRepair: _engine.triggerEmergencyRepair,
                         onCannonTap: _engine.triggerCannonBurst,
                         onCannonHoldChanged: (held) => _engine.triggerHeld = held,
                         onToggleShield: _engine.activateShield,
@@ -1227,10 +1232,14 @@ class _LiveRadarScopePainter extends CustomPainter {
   bool shouldRepaint(covariant _LiveRadarScopePainter oldDelegate) => true;
 }
 
-class _BottomWeaponsControlDeck extends StatelessWidget {
-  const _BottomWeaponsControlDeck({
+class BottomWeaponsControlDeck extends StatelessWidget {
+  const BottomWeaponsControlDeck({
+    super.key,
     required this.autoFire,
     required this.cannonAmmo,
+    required this.activeWeapon,
+    required this.specialWeaponAmmo,
+    required this.emergencyRepairKits,
     required this.missileSalvo,
     required this.overdriveCharge,
     required this.overdriveActive,
@@ -1239,6 +1248,7 @@ class _BottomWeaponsControlDeck extends StatelessWidget {
     required this.onToggleAutoFire,
     required this.onYokeChanged,
     required this.onOverdrive,
+    required this.onEmergencyRepair,
     required this.onCannonTap,
     required this.onCannonHoldChanged,
     required this.onToggleShield,
@@ -1247,6 +1257,9 @@ class _BottomWeaponsControlDeck extends StatelessWidget {
 
   final bool autoFire;
   final int cannonAmmo;
+  final PlayerWeaponType activeWeapon;
+  final int specialWeaponAmmo;
+  final int emergencyRepairKits;
   final int missileSalvo;
   final int overdriveCharge;
   final bool overdriveActive;
@@ -1255,13 +1268,31 @@ class _BottomWeaponsControlDeck extends StatelessWidget {
   final VoidCallback onToggleAutoFire;
   final ValueChanged<Offset> onYokeChanged;
   final VoidCallback onOverdrive;
+  final VoidCallback onEmergencyRepair;
   final VoidCallback onCannonTap;
   final ValueChanged<bool> onCannonHoldChanged;
   final VoidCallback onToggleShield;
   final VoidCallback onFireMissile;
 
+  Color _getWeaponColor(PlayerWeaponType type) {
+    switch (type) {
+      case PlayerWeaponType.vulcan:
+        return AvionicsColors.gold;
+      case PlayerWeaponType.plasmaSpread:
+        return AvionicsColors.cyan;
+      case PlayerWeaponType.laserBeam:
+        return const Color(0xFFFF3366);
+      case PlayerWeaponType.scatterMissile:
+        return const Color(0xFFFF9900);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
+    final weaponSubtitle = activeWeapon == PlayerWeaponType.vulcan
+        ? '$cannonAmmo'
+        : '$specialWeaponAmmo';
+
     return Container(
       padding: const EdgeInsets.fromLTRB(10, 6, 10, 10),
       decoration: BoxDecoration(
@@ -1328,7 +1359,7 @@ class _BottomWeaponsControlDeck extends StatelessWidget {
                 const SizedBox(width: 8),
                 Flexible(
                   child: Text(
-                    '20MM: $cannonAmmo // FOX-2: $missileSalvo',
+                    '${activeWeapon.shortCode}: $weaponSubtitle // FOX-2: $missileSalvo // REP: x$emergencyRepairKits',
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: AvionicsText.mono(
@@ -1355,16 +1386,31 @@ class _BottomWeaponsControlDeck extends StatelessWidget {
                     GlowingCapsuleButton(
                       key: const Key('overdrive_button'),
                       label: overdriveActive ? 'AFTERBURN' : 'OVERDRIVE',
-                      height: 40,
-                      horizontalPadding: 10,
-                      fontSize: 11.5,
+                      height: 34,
+                      horizontalPadding: 8,
+                      fontSize: 10.5,
                       onPressed: onOverdrive,
                     ),
                     const SizedBox(height: 4),
+                    GlowingCapsuleButton(
+                      key: const Key('emergency_repair_button'),
+                      label: 'REPAIR x$emergencyRepairKits',
+                      icon: Icons.healing_rounded,
+                      height: 28,
+                      horizontalPadding: 6,
+                      fontSize: 9.5,
+                      gradientColors: const [
+                        AvionicsColors.emeraldBright,
+                        AvionicsColors.emerald,
+                      ],
+                      glowColor: AvionicsColors.emeraldBright,
+                      onPressed: emergencyRepairKits > 0 ? onEmergencyRepair : null,
+                    ),
+                    const SizedBox(height: 2),
                     Text(
                       'BOOST $overdriveCharge%',
                       style: AvionicsText.mono(
-                        fontSize: 8.5,
+                        fontSize: 8,
                         color: AvionicsColors.orangePeach,
                         fontWeight: FontWeight.w700,
                       ),
@@ -1384,9 +1430,10 @@ class _BottomWeaponsControlDeck extends StatelessWidget {
                         onLongPressEnd: (_) => onCannonHoldChanged(false),
                         onLongPressCancel: () => onCannonHoldChanged(false),
                         child: _WeaponSmallVisual(
-                          title: '20MM',
-                          subtitle: '$cannonAmmo',
-                          accentColor: AvionicsColors.gold,
+                          title: activeWeapon.shortCode,
+                          subtitle: weaponSubtitle,
+                          accentColor: _getWeaponColor(activeWeapon),
+                          active: activeWeapon != PlayerWeaponType.vulcan,
                         ),
                       ),
                       const SizedBox(width: 6),
